@@ -1,0 +1,7 @@
+{
+  "generator-react-webpack": {
+    "appName": "reactMaterialDashboard",
+    "style": "scss",
+    "postcss": true
+  }
+}
