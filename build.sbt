@@ -1,4 +1,4 @@
-name := "victorious_pirate"
+name := "victorious-pirate"
 
 version := "1.0-SNAPSHOT"
 
