@@ -3,7 +3,7 @@
 # ~~~~/
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /favicon.png                controllers.Assets.at(path="/public", file="favicon.png")
+GET     /public/*file               controllers.Assets.at(path="/public", file)
 GET     /assets/*file               controllers.Assets.at(path="/public/assets", file)
 GET     /                           controllers.HomeController.index(path = "")
 GET     /*path                      controllers.HomeController.index(path)
