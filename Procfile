@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/victorious_pirate
+web: target/universal/stage/bin/victorious-pirate
