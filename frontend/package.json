@@ -28,10 +28,10 @@
     "material-ui"
   ],
   "author": {
-    "name" : "Dmitry Pahomov  ",
-    "email" : "topt.iiiii@gmail.com"
+    "name": "Dmitry Pahomov  ",
+    "email": "topt.iiiii@gmail.com"
   },
-  "license" : "MIT",
+  "license": "MIT",
   "private": true,
   "devDependencies": {
     "babel-core": "^6.0.0",
@@ -81,6 +81,8 @@
     "material-ui": "^0.15.0-alpha.1",
     "normalize.css": "^3.0.3",
     "react": "^0.14.0",
-    "react-dom": "^0.14.0"
+    "react-dom": "^0.14.0",
+    "react-router": "^2.0.1",
+    "reactfire": "^0.6.0"
   }
 }
