@@ -21,18 +21,21 @@
   "gh-pages-deploy": {
     "staticpath": "dist"
   },
-  "repository": "https://github.com/micrum/react-material-dashboard",
+  "repository": "https://github.com/pahomovda/victorious-pirate",
   "keywords": [
     "react",
     "material",
-    "material-ui",
-    "admin",
-    "dashboard"
+    "material-ui"
   ],
-  "author": "micrum",
+  "author": {
+    "name" : "Dmitry Pahomov  ",
+    "email" : "topt.iiiii@gmail.com"
+  },
+  "license" : "MIT",
+  "private": true,
   "devDependencies": {
     "babel-core": "^6.0.0",
-    "babel-eslint": "^5.0.0",
+    "babel-eslint": "^6.0.0",
     "babel-loader": "^6.0.0",
     "babel-polyfill": "^6.3.14",
     "babel-preset-es2015": "^6.0.15",
