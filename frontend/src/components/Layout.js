@@ -9,7 +9,7 @@ import FontIcon from 'material-ui/lib/font-icon';
 import Paper from 'material-ui/lib/paper';
 
 const iconStyles = {
-  marginRight: 10,
+  marginRight: 10
 };
 
 class Layout extends React.Component {
