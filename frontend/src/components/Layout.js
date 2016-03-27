@@ -6,6 +6,7 @@ import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
 import FlatButton from 'material-ui/lib/flat-button';
 import FontIcon from 'material-ui/lib/font-icon';
+import Paper from 'material-ui/lib/paper';
 
 const iconStyles = {
   marginRight: 10,
@@ -33,6 +34,7 @@ class Layout extends React.Component {
     const { content, title} = this.props;
     return (
       <div>
+        <Paper zDepth={2}>
         <AppBar
           title={title}
           iconElementLeft={<span></span>}
@@ -47,6 +49,7 @@ class Layout extends React.Component {
           <Tab value='files' label='Файловый архив' />
           <Tab value='users' label='Управление пользователями' />
         </Tabs>
+        </Paper>
         <div style={{padding: '20px'}}>{content}</div>
       </div>
     );
