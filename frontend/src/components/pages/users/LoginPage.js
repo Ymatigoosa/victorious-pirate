@@ -5,6 +5,7 @@ import TextField from 'material-ui/lib/text-field';
 import RaisedButton from 'material-ui/lib/raised-button';
 import { red500 } from 'material-ui/lib/styles/colors';
 import CircularProgress from 'material-ui/lib/circular-progress';
+import { rolename } from 'stores/roles';
 
 const isNullOrWhitespace = ( str ) => {
     if (typeof str === 'undefined' || str == null)
@@ -13,6 +14,7 @@ const isNullOrWhitespace = ( str ) => {
     return str.replace(/\s/g, '').length < 1;
 }
 
+// todo - выделить profile page
 class LoginPage extends React.Component {
   constructor(props) {
     super(props);
@@ -88,6 +90,7 @@ class LoginPage extends React.Component {
         passworderror: '',
         wholeerror: ''
       });
+      this.context.router.push('/login')
   }
   loginCb(error, user) {
     this.setState({
@@ -98,6 +101,7 @@ class LoginPage extends React.Component {
       passworderror: '',
       wholeerror: ''
     });
+    this.context.router.push('/profile')
   }
   render() {
     const { user } = this.props;
@@ -135,9 +139,16 @@ class LoginPage extends React.Component {
       return (
         <div>
           <span style={{color: red500}}>{this.state.wholeerror}</span>
-          <br/>
-          Вы вошли как {user != null ? user.fullname : <CircularProgress size={0.5} />}
-          <br/>
+          <dl>
+            <dt>Полное имя</dt>
+             <dd>{user.fullname}</dd>
+            <dt>email</dt>
+             <dd>{user.email}</dd>
+           <dt>Описание</dt>
+            <dd>{user.about}</dd>
+          <dt>Доступные роли</dt>
+           <dd>{Object.keys(user.roles).map(i => rolename(i)).join(', ')}</dd>
+          </dl>
           <RaisedButton label='Выйти' primary={true} onMouseUp={this.onLogout.bind(this)}/>
         </div>
       );
@@ -147,5 +158,10 @@ class LoginPage extends React.Component {
 //LoginPage.propTypes = { initialCount: React.PropTypes.number };
 //LoginPage.defaultProps = { initialCount: 0 };
 //reactMixin(LoginPage.prototype, ReactFireMixin);
+LoginPage.contextTypes = {
+  router: function () {
+    return React.PropTypes.func.isRequired;
+  }
+};
 
 export default LoginPage;

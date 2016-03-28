@@ -38,6 +38,11 @@ const Routes = () => (
           content: LoginPage,
           title: title('Вход')
         }} />
+      <Route path="/profile"
+        components={{
+          content: LoginPage,
+          title: title('Профиль')
+        }} />
     </Route>
   </Router>
 );

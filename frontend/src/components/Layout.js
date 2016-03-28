@@ -62,8 +62,8 @@ class Layout extends React.Component {
       : user == 'load'
         ? (<CircularProgress color='white' size={0.3} />)
         : (<FlatButton
-            label='Выйти'
-            onMouseUp={this.onLogout.bind(this)} />);
+          label='Профиль'
+          containerElement={<Link to='/profile' />} />);
     return (
       <div>
         <Paper zDepth={2}>
