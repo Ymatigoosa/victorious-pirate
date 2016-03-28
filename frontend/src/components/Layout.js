@@ -7,7 +7,8 @@ import Tab from 'material-ui/lib/tabs/tab';
 import FlatButton from 'material-ui/lib/flat-button';
 import FontIcon from 'material-ui/lib/font-icon';
 import Paper from 'material-ui/lib/paper';
-import FirebaseStore from 'stores/FirebaseStore'
+import FirebaseStore from 'stores/FirebaseStore';
+import CircularProgress from 'material-ui/lib/circular-progress';
 
 const iconStyles = {
   marginRight: 10
@@ -41,21 +42,35 @@ class Layout extends React.Component {
   handleTabsChange(value) {
     this.context.router.push(`/${value}`);
   }
+  onLogout() {
+    //console.log(123);
+    const { firebaseStore } = this.state;
+
+    firebaseStore.logout(() => this.context.router.push(`/`));
+  }
   render() {
     const { content, title} = this.props;
+    const { user } = this.state;
     const contentWithProps = React.cloneElement(content, {
       firebaseStore: this.state.firebaseStore,
       user: this.state.user
     })
+    const rightbtn = user == null
+      ? (<FlatButton
+        label='Войти'
+        containerElement={<Link to='/login' />} />)
+      : user == 'load'
+        ? (<CircularProgress color='white' size={0.3} />)
+        : (<FlatButton
+            label='Выйти'
+            onMouseUp={this.onLogout.bind(this)} />);
     return (
       <div>
         <Paper zDepth={2}>
         <AppBar
           title={title}
           iconElementLeft={<span></span>}
-          iconElementRight={
-            <FlatButton label='Войти' containerElement={<Link to='/login' />} />
-          } />
+          iconElementRight={rightbtn} />
         <Tabs
           onChange={this.handleTabsChange.bind(this)}
           value={this.getCurrentTab.apply(this)}

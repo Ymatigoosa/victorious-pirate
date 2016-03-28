@@ -1,15 +1,6 @@
 import Firebase from 'firebase';
 import EventEmitter from 'eventemitter3';
 
-const _addNewUserToFirabase = (ref, newUser) => {
-  var key = newUser.uid;
-  ref.child('users').child(key).set(newUser);
-};
-
-const _getUserFromFirebase = (ref, uid, cb) => {
-  ref.child('users').child(uid).once('value', cb);
-};
-
 const genErrorMsg = (e) => {
   var message = ''
   switch ( e.code) {
@@ -80,9 +71,9 @@ class FirebaseStore extends EventEmitter {
     const authData = this.ref.getAuth();
     if (authData != null)
     {
-      _getUserFromFirebase(this.ref, authData.uid, function (snap) {
-        this.cachedUser = snap.val();
-        this.emit('user-changed', this.cachedUser);
+      this._setUser('load');
+      this._getUserFromFirebase(authData.uid, function (snap) {
+        this._setUser(snap.val());
         //console.log('initial data loaded!', Object.keys(snap.val()).length === count);
       }.bind(this));
     }
@@ -107,39 +98,52 @@ class FirebaseStore extends EventEmitter {
             about: about,
             roles: roles || {}
           };
-          _addNewUserToFirabase(this.ref, newuser);
+          this._addNewUserToFirabase(newuser);
           cb && cb(false, newuser);
       }
     }.bind(this));
   }
   loginWithPW(userObj, cb){
+    this._setUser('load');
     this.ref.authWithPassword(userObj, function(err, authData) {
       if (err) {
         var message = genErrorMsg(err);
         cb && cb(message);
         console.error(message);
+        this._setUser(null);
       } else {
-        _getUserFromFirebase(this.ref, authData.uid, function (snap) {
-          this.cachedUser = snap.val();
-          cb && cb(false, this.cachedUser);
-          this.emit('user-changed', this.cachedUser);
+        this._getUserFromFirebase(authData.uid, function (snap) {
+          this._setUser(snap.val());
+          cb && cb(false, this.getUser());
           //console.log('initial data loaded!', Object.keys(snap.val()).length === count);
         }.bind(this));
       }
     }.bind(this));
   }
   isLoggedIn(){
-    return this.cachedUser != null;
+    return this.cachedUser != null && this.cachedUser != 'load';
   }
   isInRole(role){
     return this.cachedUser != null
+      && this.cachedUser != 'load'
       && this.cachedUser.roles[role] != void 0
       && this.cachedUser.roles[role] != null;
   }
   logout(cb){
     this.ref.unauth();
+    this._setUser(null);
     this.cachedUser = null;
     cb && cb(false);
+  }
+  _addNewUserToFirabase (newUser) {
+    var key = newUser.uid;
+    this.ref.child('users').child(key).set(newUser);
+  }
+  _getUserFromFirebase (uid, cb) {
+    this.ref.child('users').child(uid).once('value', cb);
+  }
+  _setUser (user) {
+    this.cachedUser = user;
     this.emit('user-changed', this.cachedUser);
   }
 };
