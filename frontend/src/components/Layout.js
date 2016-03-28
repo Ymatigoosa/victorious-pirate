@@ -46,7 +46,7 @@ class Layout extends React.Component {
     //console.log(123);
     const { firebaseStore } = this.state;
 
-    firebaseStore.logout(() => this.context.router.push(`/`));
+    firebaseStore.logout(() => this.context.router.push('/'));
   }
   render() {
     const { content, title} = this.props;
