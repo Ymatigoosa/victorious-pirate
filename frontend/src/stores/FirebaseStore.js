@@ -1,18 +1,12 @@
 import Firebase from 'firebase';
+import EventEmitter from 'eventemitter3';
 
-const forge = 'https://victorious-pirate.firebaseio.com';
-const ref = new Firebase(forge);
-
-// global user object
-// todo: make not global
-var cachedUser = null;
-
-const addNewUserToFirabase = (newUser) => {
+const _addNewUserToFirabase = (ref, newUser) => {
   var key = newUser.uid;
   ref.child('users').child(key).set(newUser);
 };
 
-const getUser = (uid, cb) => {
+const _getUserFromFirebase = (ref, uid, cb) => {
   ref.child('users').child(uid).once('value', cb);
 };
 
@@ -77,9 +71,30 @@ const genErrorMsg = (e) => {
   return message;
 }
 
-const FirebaseStore = {
-  createUser: function({email, password, fullname, about, roles}, cb) {
-    ref.createUser({email: email, password: password}, function(err, authData) {
+class FirebaseStore extends EventEmitter {
+  constructor(url) {
+    super();
+    this.ref = new Firebase(url);
+    this.cachedUser = null;
+
+    const authData = this.ref.getAuth();
+    if (authData != null)
+    {
+      _getUserFromFirebase(this.ref, authData.uid, function (snap) {
+        this.cachedUser = snap.val();
+        this.emit('user-changed', this.cachedUser);
+        //console.log('initial data loaded!', Object.keys(snap.val()).length === count);
+      }.bind(this));
+    }
+  }
+  getRef() {
+    return this.ref;
+  }
+  getUser() {
+    return this.cachedUser;
+  }
+  createUser({email, password, fullname, about, roles}, cb) {
+    this.ref.createUser({email: email, password: password}, function(err, authData) {
       if (err) {
         var message = genErrorMsg(err);
         console.error(message);
@@ -92,40 +107,43 @@ const FirebaseStore = {
             about: about,
             roles: roles || {}
           };
-          addNewUserToFirabase(newuser);
+          _addNewUserToFirabase(this.ref, newuser);
           cb && cb(false, newuser);
       }
     }.bind(this));
-  },
-  loginWithPW: function(userObj, cb){
-    ref.authWithPassword(userObj, function(err, authData){
+  }
+  loginWithPW(userObj, cb){
+    this.ref.authWithPassword(userObj, function(err, authData) {
       if (err) {
         var message = genErrorMsg(err);
         cb && cb(message);
         console.error(message);
       } else {
-        getUser(authData.uid, function(snap) {
-          cachedUser = snap.val();
-          cb && cb(false, cachedUser);
+        _getUserFromFirebase(this.ref, authData.uid, function (snap) {
+          this.cachedUser = snap.val();
+          cb && cb(false, this.cachedUser);
+          this.emit('user-changed', this.cachedUser);
           //console.log('initial data loaded!', Object.keys(snap.val()).length === count);
-        });
+        }.bind(this));
       }
     }.bind(this));
-  },
-  isLoggedIn: function(){
-    return cachedUser != null;
-  },
-  isInRole: function(role){
-    return cachedUser != null
-      && cachedUser.roles[role] != void 0
-      && cachedUser.roles[role] != null;
-  },
-  logout: function(cb){
-    ref.unauth();
-    cachedUser = null;
+  }
+  isLoggedIn(){
+    return this.cachedUser != null;
+  }
+  isInRole(role){
+    return this.cachedUser != null
+      && this.cachedUser.roles[role] != void 0
+      && this.cachedUser.roles[role] != null;
+  }
+  logout(cb){
+    this.ref.unauth();
+    this.cachedUser = null;
     cb && cb(false);
-  },
-  ref: ref
+    this.emit('user-changed', this.cachedUser);
+  }
 };
 
-export default FirebaseStore;
+const SINGLETON = new FirebaseStore('https://victorious-pirate.firebaseio.com');
+
+export default SINGLETON;

@@ -7,6 +7,7 @@ import Tab from 'material-ui/lib/tabs/tab';
 import FlatButton from 'material-ui/lib/flat-button';
 import FontIcon from 'material-ui/lib/font-icon';
 import Paper from 'material-ui/lib/paper';
+import FirebaseStore from 'stores/FirebaseStore'
 
 const iconStyles = {
   marginRight: 10
@@ -15,6 +16,16 @@ const iconStyles = {
 class Layout extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      firebaseStore: FirebaseStore,
+      user: FirebaseStore.getUser()
+    };
+
+    FirebaseStore.on('user-changed', (user) => {
+      this.setState({
+        user: user
+      });
+    })
   }
   getCurrentTab() {
     const router = this.context.router;
@@ -32,6 +43,10 @@ class Layout extends React.Component {
   }
   render() {
     const { content, title} = this.props;
+    const contentWithProps = React.cloneElement(content, {
+      firebaseStore: this.state.firebaseStore,
+      user: this.state.user
+    })
     return (
       <div>
         <Paper zDepth={2}>
@@ -50,7 +65,7 @@ class Layout extends React.Component {
           <Tab value='users' label='Управление пользователями' />
         </Tabs>
         </Paper>
-        <div style={{padding: '20px'}}>{content}</div>
+        <div style={{padding: '20px'}}>{contentWithProps}</div>
       </div>
     );
   }

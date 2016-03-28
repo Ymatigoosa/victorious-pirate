@@ -79,13 +79,15 @@
   },
   "dependencies": {
     "core-js": "^2.0.0",
+    "eventemitter3": "^1.2.0",
+    "firebase": "^2.4.1",
     "material-ui": "^0.15.0-alpha.2",
     "node-uuid": "^1.4.7",
     "normalize.css": "^3.0.3",
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
+    "react-mixin": "^2.0.2",
     "react-router": "^2.0.1",
-    "firebase": "^2.4.1",
     "reactfire": "^0.6.0"
   }
 }
