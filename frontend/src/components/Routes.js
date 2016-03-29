@@ -1,6 +1,7 @@
 import React from 'react';
 import { Router, Route, browserHistory, IndexRedirect } from 'react-router';
 
+import UsersPage from 'components/pages/users/UsersPage';
 import JournalPage from 'components/pages/journal/JournalPage';
 import FilesPage from 'components/pages/files/FilesPage';
 import Layout from 'components/Layout'
