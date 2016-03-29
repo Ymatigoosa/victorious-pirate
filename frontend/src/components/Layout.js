@@ -212,9 +212,8 @@ class Layout extends React.Component {
         ? <ListItem><CircularProgress size={0.3} /></ListItem>
         : <ListItem
             primaryText={user.email}
-            onTouchTap={this.toggleProfileDialog.bind(this)}
             secondaryText={isNullOrWhitespace(user.fullname) ? '' :  user.fullname}
-          />;
+            onTouchTap={this.toggleProfileDialog.bind(this)} />;
 
     return (
       <div>
