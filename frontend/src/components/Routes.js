@@ -33,16 +33,6 @@ const Routes = () => (
           content: UsersPage,
           title: title('Управление пользователями')
         }} />
-      <Route path="/login"
-        components={{
-          content: LoginPage,
-          title: title('Вход')
-        }} />
-      <Route path="/profile"
-        components={{
-          content: LoginPage,
-          title: title('Профиль')
-        }} />
     </Route>
   </Router>
 );
