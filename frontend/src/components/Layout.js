@@ -65,10 +65,10 @@ class Layout extends React.Component {
     this._onUserChange = this._onUserChange.bind(this);
   }
   componentWillMount() {
-    FirebaseStore.on('user-changed', this._onUserChange);
+    this.state.firebaseStore.on('user-changed', this._onUserChange);
   }
   componentWillUnmount() {
-    FirebaseStore.off('user-changed', this._onUserChange);
+    this.state.firebaseStore.off('user-changed', this._onUserChange);
   }
   _onUserChange (user) {
     this.setState({
@@ -152,6 +152,9 @@ class Layout extends React.Component {
       isProfileDialogOpen: !this.state.isProfileDialogOpen
     });
   }
+  isInRole(role) {
+    return this.state.firebaseStore.isInRole(role);
+  }
   render() {
     const {
       content,
@@ -200,7 +203,7 @@ class Layout extends React.Component {
           onLogin={this.onLogin.bind(this)} />
       : <ProfileDialog
           open={isProfileDialogOpen}
-          onRequestClose={this.toggleLoginDialog.bind(this)}
+          onRequestClose={this.toggleProfileDialog.bind(this)}
           user={user} onLogout={this.onLogout.bind(this)} />;
 
     const profileBtn = user == null
@@ -208,7 +211,6 @@ class Layout extends React.Component {
       : user == 'load'
         ? <ListItem><CircularProgress size={0.3} /></ListItem>
         : <ListItem
-            leftAvatar={<Avatar icon={<Person />} />}
             primaryText={user.email}
             onTouchTap={this.toggleProfileDialog.bind(this)}
             secondaryText={isNullOrWhitespace(user.fullname) ? '' :  user.fullname}
@@ -227,13 +229,17 @@ class Layout extends React.Component {
           <AppBar title="Меню" iconElementLeft={<span></span>} />
           <List>
             <ListItemLink to='/journal' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Журнал" />
-            <ListItemLink to='/files' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Файлы" />
+            {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Файлы" /> : null}
           </List>
-          <Divider />
-          <List>
-            <Subheader>Настройки</Subheader>
-            <ListItemLink to='/users' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Пользователи" />
-          </List>
+          {this.isInRole('admin') ? (
+            <div>
+              <Divider />
+              <List>
+                <Subheader>Настройки</Subheader>
+                <ListItemLink to='/users' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Пользователи" />
+              </List>
+            </div>
+          ) : null}
           <Divider />
           <List>
             <Subheader>Пользователь</Subheader>

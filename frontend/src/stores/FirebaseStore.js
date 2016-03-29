@@ -124,10 +124,14 @@ class FirebaseStore extends EventEmitter {
     return this.cachedUser != null && this.cachedUser != 'load';
   }
   isInRole(role){
-    return this.cachedUser != null
-      && this.cachedUser != 'load'
-      && this.cachedUser.roles[role] != void 0
-      && this.cachedUser.roles[role] != null;
+    if (Array.isArray(role)) {
+      return role.reduce((a, b) => a || this.isInRole(b), false);
+    } else {
+      return this.cachedUser != null
+        && this.cachedUser != 'load'
+        && this.cachedUser.roles[role] != void 0
+        && this.cachedUser.roles[role] != null;
+    }
   }
   logout(cb){
     this.ref.unauth();
