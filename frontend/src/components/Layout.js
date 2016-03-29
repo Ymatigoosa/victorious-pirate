@@ -15,12 +15,27 @@ import ListItem from 'material-ui/lib/lists/list-item';
 import Divider from 'material-ui/lib/divider';
 import Subheader from 'material-ui/lib/Subheader';
 
+const ListItemLink = (props, context) => {
+  const { to, onTouchTap } = props;
+  const { router } = context;
+  const enchantedOnTouchTap = (e) => {
+   router.push(to);
+   onTouchTap(e);
+  };
+  return router.isActive(to)
+     ? <ListItem {...props} onTouchTap={null} style={{backgroundColor: "rgba(0, 0, 0, 0.2)"}} />
+     : <ListItem {...props} onTouchTap={enchantedOnTouchTap} />
+};
+ListItemLink.contextTypes = {
+  router: React.PropTypes.func.isRequired
+};
+
 class Layout extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       firebaseStore: FirebaseStore,
-      isNavOpen: true,
+      isNavOpen: false,
       user: FirebaseStore.getUser()
     };
 
@@ -37,8 +52,8 @@ class Layout extends React.Component {
       user: user
     });
   }
-  getCurrentTab() {
-    const router = this.context.router;
+  getCurrentPage() {
+    const { router } = this.context;
     if (router.isActive('/journal'))
       return 'journal';
     if (router.isActive('/files'))
@@ -62,14 +77,11 @@ class Layout extends React.Component {
       isNavOpen: !this.state.isNavOpen
     });
   }
-  goToPage(page)
-  {
-    this.context.router.push(`/${page}`);
-    this.toggleLeftNav();
-  }
   render() {
     const { content, title} = this.props;
     const { user } = this.state;
+    const { router } = this.context;
+
     const contentWithProps = React.cloneElement(content, {
       firebaseStore: this.state.firebaseStore,
       user: this.state.user
@@ -95,13 +107,13 @@ class Layout extends React.Component {
           docked={false} >
           <AppBar title="Меню" iconElementLeft={<span></span>} />
           <List>
-            <ListItem onTouchTap={this.goToPage.bind(this, 'journal')} primaryText="Журнал" />
-            <ListItem onTouchTap={this.goToPage.bind(this, 'files')} primaryText="Файлы" />
+            <ListItemLink to='/journal' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Журнал" />
+            <ListItemLink to='/files' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Файлы" />
           </List>
           <Divider />
           <List>
             <Subheader>Настройки</Subheader>
-            <ListItem onTouchTap={this.goToPage.bind(this, 'users')} primaryText="Пользователи" />
+            <ListItemLink to='/users' onTouchTap={this.toggleLeftNav.bind(this)} primaryText="Пользователи" />
           </List>
           <Divider />
           <List>
@@ -123,9 +135,7 @@ class Layout extends React.Component {
   }
 }
 Layout.contextTypes = {
-  router: function () {
-    return React.PropTypes.func.isRequired;
-  }
+  router: React.PropTypes.func.isRequired
 };
 
 export default Layout;
