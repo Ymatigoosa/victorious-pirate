@@ -6,6 +6,12 @@ import FlatButton from 'material-ui/lib/flat-button';
 import Dialog from 'material-ui/lib/dialog';
 
 class LoginDialog extends React.Component {
+  handleEnterKeyDown(e) {
+    const { onLogin } = this.props;
+    if(e.keyCode == 13) {
+      onLogin(e)
+    }
+  }
   renderBody() {
     const {
       user,
@@ -29,6 +35,7 @@ class LoginDialog extends React.Component {
             value={email}
             errorText={emailError}
             onChange={onEmailChange}
+            onKeyDown={this.handleEnterKeyDown.bind(this)}
           />
           <br/>
           <TextField
@@ -37,6 +44,7 @@ class LoginDialog extends React.Component {
             value={password}
             errorText={passwordError}
             onChange={onPasswordChange}
+            onKeyDown={this.handleEnterKeyDown.bind(this)}
           />
         </div>
       );
@@ -52,8 +60,9 @@ class LoginDialog extends React.Component {
       user,
       onLogin,
       open,
-      wholeError
+      wholeLoginError
     } = this.props;
+    //console.log(this.props);
     const actions = [
       <FlatButton
         label="Отмена"
@@ -74,7 +83,7 @@ class LoginDialog extends React.Component {
               open={open}
               onRequestClose={onRequestClose}
             >
-        <span style={{color: red500}}>{wholeError}</span>
+        <span style={{color: red500}}>{wholeLoginError}</span>
         {this.renderBody()}
       </Dialog>
   }

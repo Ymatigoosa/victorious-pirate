@@ -14,6 +14,8 @@ import List from 'material-ui/lib/lists/list';
 import ListItem from 'material-ui/lib/lists/list-item';
 import Divider from 'material-ui/lib/divider';
 import Subheader from 'material-ui/lib/Subheader';
+import Avatar from 'material-ui/lib/avatar';
+import Person from 'material-ui/lib/svg-icons/social/person';
 
 import FirebaseStore from 'stores/FirebaseStore';
 import LoginDialog from 'components/LoginDialog'
@@ -49,16 +51,16 @@ class Layout extends React.Component {
       emailError: '',
       password: '',
       passwordError: '',
-      wholeError: ''
+      wholeLoginError: ''
     };
 
-    this.state = {
+    this.state = Object.assign({}, this._cleanLoginDialog, {
       firebaseStore: FirebaseStore,
       isNavOpen: false,
       user: FirebaseStore.getUser(),
-      loginDialog: this._cleanLoginDialog,
-      isUserDialogOpen: false
-    };
+      isLoginDialogOpen: false,
+      isProfileDialogOpen: false
+    });
 
     this._onUserChange = this._onUserChange.bind(this);
   }
@@ -79,44 +81,38 @@ class Layout extends React.Component {
     });
   }
   onEmailChange(e) {
-    this.setLogiDialogState({
+    this.setState({
       email: e.target.value,
       emailError: ''
     });
   }
   onPasswordChange(e) {
-    this.setLogiDialogState({
+    this.setState({
       password: e.target.value,
       passwordError: ''
     });
   }
-  setLogiDialogState(state) {
-    const newLoginDialogState = Object.assign({}, this.state.loginDialog, state);
-    this.setState({
-      loginDialog: newLoginDialogState
-    });
-  }
   onLogin() {
-    const { firebaseStore, user, loginDialog: {email, password} } = this.state;
+    const { firebaseStore, user, email, password } = this.state;
     if (user != null)
       return;
     var errors = false;
     if (isNullOrWhitespace(email)) {
-      this.setLogiDialogState({
+      this.setState({
         emailError: 'Обязательное поле'
       });
       errors = true;
     }
     if (isNullOrWhitespace(password)) {
-      this.setLogiDialogState({
+      this.setState({
         passwordError: 'Обязательное поле'
       });
       errors = true;
     }
     if (!errors)
     {
-      this.setLogiDialogState({
-        wholeError: ''
+      this.setState({
+        wholeLoginError: ''
       });
 
       firebaseStore.loginWithPW({
@@ -131,36 +127,48 @@ class Layout extends React.Component {
     if (user == null)
       return;
 
-    this.setLogiDialogState({
-        wholeError: ''
-    });
-
     firebaseStore.logout(this.logoutCb.bind(this));
   }
   logoutCb(error, user) {
-
+    toggleProfileDialog();
   }
   loginCb(error, user) {
-    if (error)
-    {
-      this.setLogiDialogState({
-        wholeError: error
+    if (error) {
+      this.setState({
+        wholeLoginError: error
       });
     } else {
-      this.setState({
-        loginDialog: this._cleanLoginDialog
-      });
+      this.setState(this._cleanLoginDialog);
+      this.toggleLoginDialog();
     }
   }
-  toggleUserDialog()
-  {
+  toggleLoginDialog() {
     this.setState({
-      isUserDialogOpen: !this.state.isUserDialogOpen
+      isLoginDialogOpen: !this.state.isLoginDialogOpen
+    });
+  }
+  toggleProfileDialog() {
+    this.setState({
+      isProfileDialogOpen: !this.state.isProfileDialogOpen
     });
   }
   render() {
-    const { content, title} = this.props;
-    const { user, loginDialog, isUserDialogOpen } = this.state;
+    const {
+      content,
+      title
+    } = this.props;
+    const {
+      user,
+      loginDialog,
+      isLoginDialogOpen,
+      isProfileDialogOpen,
+      email,
+      emailError,
+      onEmailChange,
+      password,
+      passwordError,
+      wholeLoginError
+    } = this.state;
     const { router } = this.context;
 
     const contentWithProps = React.cloneElement(content, {
@@ -176,9 +184,36 @@ class Layout extends React.Component {
     //    : (<FlatButton
     //      label='Профиль'
     //      containerElement={<Link to='/profile' />} />);
-    const userDialog = user == null || user == 'load' //ProfileDialog
-      ? <LoginDialog {...loginDialog} open={isUserDialogOpen} onRequestClose={this.toggleUserDialog.bind(this)} user={user} onEmailChange={this.onEmailChange.bind(this)} onPasswordChange={this.onPasswordChange.bind(this)} onLogin={this.onLogin.bind(this)} />
-      : <ProfileDialog open={isUserDialogOpen} onRequestClose={this.toggleUserDialog.bind(this)} user={user} onLogout={this.onLogout.bind(this)}/>;
+    const userDialog = user == null || user == 'load'
+      ? <LoginDialog
+          email={email}
+          emailError={emailError}
+          onEmailChange={onEmailChange}
+          password={password}
+          passwordError={passwordError}
+          wholeLoginError={wholeLoginError}
+          open={isLoginDialogOpen}
+          onRequestClose={this.toggleLoginDialog.bind(this)}
+          user={user}
+          onEmailChange={this.onEmailChange.bind(this)}
+          onPasswordChange={this.onPasswordChange.bind(this)}
+          onLogin={this.onLogin.bind(this)} />
+      : <ProfileDialog
+          open={isProfileDialogOpen}
+          onRequestClose={this.toggleLoginDialog.bind(this)}
+          user={user} onLogout={this.onLogout.bind(this)} />;
+
+    const profileBtn = user == null
+      ? <ListItem onTouchTap={this.toggleLoginDialog.bind(this)} primaryText="Войти" />
+      : user == 'load'
+        ? <ListItem><CircularProgress size={0.3} /></ListItem>
+        : <ListItem
+            leftAvatar={<Avatar icon={<Person />} />}
+            primaryText={user.email}
+            onTouchTap={this.toggleProfileDialog.bind(this)}
+            secondaryText={isNullOrWhitespace(user.fullname) ? '' :  user.fullname}
+          />;
+
     return (
       <div>
         <AppBar
@@ -202,17 +237,9 @@ class Layout extends React.Component {
           <Divider />
           <List>
             <Subheader>Пользователь</Subheader>
-            <ListItem onTouchTap={this.toggleUserDialog.bind(this)} primaryText="Войти" />
+            {profileBtn}
           </List>
         </LeftNav>
-        {/*<Tabs
-          onChange={this.handleTabsChange.bind(this)}
-          value={this.getCurrentTab.apply(this)}
-          >
-          <Tab value='journal' label='Журнал' />
-          <Tab value='files' label='Файловый архив' />
-          <Tab value='users' label='Управление пользователями' />
-        </Tabs>*/}
         <div style={{padding: '20px'}}>{contentWithProps}</div>
         {userDialog}
       </div>
