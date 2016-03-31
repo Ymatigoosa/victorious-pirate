@@ -16,17 +16,22 @@ import Divider from 'material-ui/lib/divider';
 import Subheader from 'material-ui/lib/Subheader';
 import Avatar from 'material-ui/lib/avatar';
 import Person from 'material-ui/lib/svg-icons/social/person';
+import * as Colors from 'material-ui/lib/styles/colors';
 
 import LoginDialog from 'components/LoginDialog'
 import ProfileDialog from 'components/ProfileDialog'
 import isNullOrWhitespace from 'utils/isNullOrWhitespace'
 import config from 'config';
 
-const ListItemLink = (props) => {
+const ListItemLink = (props, context) => {
+  console.log(context);
   const { to, leftNavPush, location } = props;
   return location.pathname.startsWith(to)
-     ? <ListItem {...props} onTouchTap={null} style={{backgroundColor: "rgba(0, 0, 0, 0.2)"}} />
+     ? <ListItem {...props} onTouchTap={null} style={{color: context.muiTheme.rawTheme.palette.accent1Color}} />
      : <ListItem {...props} onTouchTap={() => leftNavPush(to)} />
+};
+ListItemLink.contextTypes = {
+  muiTheme: React.PropTypes.object.isRequired
 };
 
 class Layout extends React.Component {
@@ -107,15 +112,16 @@ class Layout extends React.Component {
           user={user.data}
           onLogout={logout} />;
 
+    const avatarsyle = {marginBottom:'15px'};
     const profileBtn = user.data == null
-      ? <ListItem onTouchTap={toggleLoginDialog} primaryText="Войти" />
+      ? <ListItem onTouchTap={toggleLoginDialog} primaryText="Войти" ><Avatar style={avatarsyle} icon={<Person />} /></ListItem>
       : user.data == 'load'
         ? <ListItem><CircularProgress size={0.3} /></ListItem>
         : <ListItem
             primaryText={user.data.email}
             onTouchTap={toggleProfileDialog}
             secondaryText={isNullOrWhitespace(user.data.fullname) ? '' :  user.data.fullname}
-          />;
+          ><Avatar style={avatarsyle} backgroundColor={Colors.green400} icon={<Person  />} /></ListItem>;
 
     const itemlintprops = {
       location: location,
@@ -132,24 +138,19 @@ class Layout extends React.Component {
           open={isNavOpen}
           onRequestChange={toggleLeftNav}
           docked={false} >
-          <AppBar title="Меню" iconElementLeft={<span></span>} />
           <List>
+            <div style={{textAlign: 'center', marginTop: '-8px', backgroundColor: Colors.grey100 }}>{profileBtn}</div>
+            <Divider />
+            <Subheader>Меню</Subheader>
             <ListItemLink to='/journal' {...itemlintprops} primaryText="Журнал" />
             {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...itemlintprops} primaryText="Файлы" /> : null}
-          </List>
-          {this.isInRole('admin') ? (
-            <div>
-              <Divider />
-              <List>
-                <Subheader>Настройки</Subheader>
-                <ListItemLink to='/users' {...itemlintprops} primaryText="Пользователи" />
-              </List>
-            </div>
-          ) : null}
-          <Divider />
-          <List>
-            <Subheader>Пользователь</Subheader>
-            {profileBtn}
+            {this.isInRole('admin') ? (
+              <div>
+                <Divider />
+                  <Subheader>Настройки</Subheader>
+                  <ListItemLink to='/users' {...itemlintprops} primaryText="Пользователи" />
+              </div>
+            ) : null}
           </List>
         </LeftNav>
         <div style={{padding: '20px'}}>{content}</div>
@@ -168,7 +169,7 @@ class Layout extends React.Component {
   }
 }
 Layout.contextTypes = {
-  router: React.PropTypes.object.isRequired
+  muiTheme: React.PropTypes.object
 };
 
 export default Layout;
