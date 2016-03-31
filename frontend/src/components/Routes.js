@@ -1,18 +1,17 @@
 import React from 'react';
-import { Router, Route, browserHistory, IndexRedirect } from 'react-router';
+import { Router, Route, IndexRedirect } from 'react-router';
 
 import UsersPage from 'components/pages/users/UsersPage';
 import JournalPage from 'components/pages/journal/JournalPage';
 import FilesPage from 'components/pages/files/FilesPage';
-import Layout from 'components/Layout'
+import LayoutContainer from 'components/LayoutContainer'
 
 const title = (title) => () => (
   <span>{title}</span>
 );
 
-const Routes = () => (
-  <Router history={browserHistory}>
-    <Route path="/" component={Layout}>
+const Routes = (
+    <Route path="/" component={LayoutContainer}>
       <IndexRedirect to="/journal" />
       <Route
         path="/journal"
@@ -33,7 +32,6 @@ const Routes = () => (
           title: title('Управление пользователями')
         }} />
     </Route>
-  </Router>
 );
 
 export default Routes;

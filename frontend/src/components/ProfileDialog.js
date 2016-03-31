@@ -4,7 +4,7 @@ import { red500 } from 'material-ui/lib/styles/colors';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import FlatButton from 'material-ui/lib/flat-button';
 import Dialog from 'material-ui/lib/dialog';
-import { rolename } from 'stores/roles';
+import { rolename } from 'components/RoleName';
 import RaisedButton from 'material-ui/lib/raised-button';
 
 class ProfileDialog extends React.Component {

@@ -23,11 +23,11 @@ class LoginDialog extends React.Component {
       onPasswordChange
     } = this.props;
 
-    if (user == 'load') {
+    if (user.data == 'load') {
       return (
           <CircularProgress />
       );
-    } else if (user == null){
+    } else if (user.data == null) {
       return (
         <div>
           <TextField
@@ -73,6 +73,7 @@ class LoginDialog extends React.Component {
         label="Войти"
         primary={true}
         onTouchTap={onLogin}
+        disabled={user.data != null}
       />,
     ];
 
