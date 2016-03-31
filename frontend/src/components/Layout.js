@@ -130,7 +130,7 @@ class Layout extends React.Component {
             secondaryText={isNullOrWhitespace(user.data.fullname) ? '' :  user.data.fullname}
           ><Avatar style={avatarsyle} backgroundColor={Colors.green400} icon={<Person  />} /></ListItem>;
 
-    const itemlintprops = {
+    const listitemlinkprops = {
       location: location,
       leftNavPush: leftNavPush
     };
@@ -149,13 +149,13 @@ class Layout extends React.Component {
             <div style={{textAlign: 'center', marginTop: '-8px', backgroundColor: Colors.grey100 }}>{profileBtn}</div>
             <Divider />
             <Subheader>Меню</Subheader>
-            <ListItemLink to='/journal' {...itemlintprops} primaryText="Журнал" />
-            {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...itemlintprops} primaryText="Файлы" /> : null}
+            <ListItemLink to='/journal' {...listitemlinkprops} primaryText="Журнал" />
+            {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...listitemlinkprops} primaryText="Файлы" /> : null}
             {this.isInRole('admin') ? (
               <div>
                 <Divider />
                   <Subheader>Настройки</Subheader>
-                  <ListItemLink to='/users' {...itemlintprops} primaryText="Пользователи" />
+                  <ListItemLink to='/users' {...listitemlinkprops} primaryText="Пользователи" />
               </div>
             ) : null}
           </List>
