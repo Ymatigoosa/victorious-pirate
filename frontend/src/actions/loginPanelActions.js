@@ -61,10 +61,13 @@ export function initAuth() {
     }
   }
 }
-export function login() {
+export function login(externaldata) {
   return (dispatch, getState) => {
-    const { firebaseService, user, loginPanel: {email, password }} = getState();
-    console.log('login');
+    const { firebaseService, user, loginPanel} = getState();
+
+    const email = externaldata != void 0 ? externaldata.email : loginPanel.email;
+    const password = externaldata != void 0 ? externaldata.password : loginPanel.password;
+    //console.log(externaldata, email, password);
     if (user.data != null)
       return;
 

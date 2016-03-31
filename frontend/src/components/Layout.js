@@ -6,6 +6,7 @@ import AppBar from 'material-ui/lib/app-bar';
 import Tabs from 'material-ui/lib/tabs/tabs';
 import Tab from 'material-ui/lib/tabs/tab';
 import FlatButton from 'material-ui/lib/flat-button';
+import RaisedButton from 'material-ui/lib/raised-button';
 import FontIcon from 'material-ui/lib/font-icon';
 import Paper from 'material-ui/lib/paper';
 import CircularProgress from 'material-ui/lib/circular-progress';
@@ -24,7 +25,7 @@ import isNullOrWhitespace from 'utils/isNullOrWhitespace'
 import config from 'config';
 
 const ListItemLink = (props, context) => {
-  console.log(context);
+  //console.log(context);
   const { to, leftNavPush, location } = props;
   return location.pathname.startsWith(to)
      ? <ListItem {...props} onTouchTap={null} style={{color: context.muiTheme.rawTheme.palette.accent1Color}} />
@@ -105,7 +106,13 @@ class Layout extends React.Component {
           user={user}
           onEmailChange={(e) => changeEmail(e.target.value)}
           onPasswordChange={(e) => changePassword(e.target.value)}
-          onLogin={login} />
+          onLogin={() => login()} >
+            <div>
+              <RaisedButton label="admin" onTouchTap={() => login({email: 'admin@admin.com', password: 'admin'})} />
+              <RaisedButton label="clerk" onTouchTap={() => login({email: 'clerk@clerk.com', password: 'clerk'})} />
+              <RaisedButton label="teacher" onTouchTap={() => login({email: 'teacher@teacher.com', password: 'teacher'})} />
+            </div>
+          </LoginDialog>
       : <ProfileDialog
           open={isProfileDialogOpen}
           onRequestClose={toggleProfileDialog}

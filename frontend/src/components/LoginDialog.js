@@ -46,6 +46,7 @@ class LoginDialog extends React.Component {
             onChange={onPasswordChange}
             onKeyDown={this.handleEnterKeyDown.bind(this)}
           />
+          {this.props.children}
         </div>
       );
     } else {
