@@ -1,8 +1,9 @@
 import React from 'react';
-import { Router, Route, IndexRedirect } from 'react-router';
+import { Router, Route, IndexRedirect, IndexRoute } from 'react-router';
 
 import UsersPage from 'components/pages/users/UsersPage';
 import JournalPage from 'components/pages/journal/JournalPage';
+import Terms from 'components/pages/journal/Terms';
 import FilesPage from 'components/pages/files/FilesPage';
 import LayoutContainer from 'components/LayoutContainer'
 
@@ -10,27 +11,22 @@ const title = (title) => () => (
   <span>{title}</span>
 );
 
+const simplecontainer = ({children}) => (
+  {children}
+);
+
 const Routes = (
     <Route path="/" component={LayoutContainer}>
       <IndexRedirect to="/journal" />
-      <Route
-        path="/journal"
-        components={{
-          content: JournalPage,
-          title: title('Журнал')
-        }} />
+      <Route path="/journal">
+        <IndexRoute component={JournalPage} />
+      </Route>
       <Route
         path="/files"
-        components={{
-          content: FilesPage,
-          title: title('Файлы')
-        }} />
+        component={FilesPage} />
       <Route
         path="/users"
-        components={{
-          content: UsersPage,
-          title: title('Управление пользователями')
-        }} />
+        components={UsersPage} />
     </Route>
 );
 

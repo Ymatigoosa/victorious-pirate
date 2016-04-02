@@ -1,12 +1,11 @@
 import React from 'react';
 import { intersperse } from 'utils/Utils';
 
-const Breadcrumbs = (props) => {
-  const { children } = props;
-  const enchantedchildren = intersperse(children, (<span>&nbsp;/&nbsp;</span>));
+const Breadcrumbs = ({items}) => {
+  const enchantedchildren = intersperse(items, ' / ');
   return (
     <div>
-      {enchantedchildren}
+      {enchantedchildren.map( (el, i) => (<span key={i}>{el}</span>) )}
     </div>
   );
 };

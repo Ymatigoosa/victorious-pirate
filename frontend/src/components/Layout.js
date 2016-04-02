@@ -63,8 +63,7 @@ class Layout extends React.Component {
   render() {
     //console.log('props', this.props);
     const {
-      content,
-      title,
+      children,
       user,
       layout: {
         isLoginDialogOpen,
@@ -96,15 +95,14 @@ class Layout extends React.Component {
       routeActions,
     } = this.props;
 
-    //const rightbtn = user == null
-    //  ? (<FlatButton
-    //    label='Войти'
-    //    containerElement={<Link to='/login' />} />)
-    //  : user == 'load'
-    //    ? (<CircularProgress color='white' size={0.3} />)
-    //    : (<FlatButton
-    //      label='Профиль'
-    //      containerElement={<Link to='/profile' />} />);
+    const title = location.pathname.startsWith('/journal')
+      ? 'Журнал'
+      : location.pathname.startsWith('/files')
+        ? 'Файлы'
+        : location.pathname.startsWith('/users')
+          ? 'Управление пользователями'
+          : 'Неизвестная страница';
+
     const userDialog = !user.isLoggedIn()
       ? <LoginDialog
           email={email}
@@ -174,7 +172,7 @@ class Layout extends React.Component {
           </List>
         </LeftNav>
         <Paper style={papersontentstyle} >
-            {content}
+            {children}
         </Paper>
         {/*<div className='Layout-footer'>
           {'футер'}

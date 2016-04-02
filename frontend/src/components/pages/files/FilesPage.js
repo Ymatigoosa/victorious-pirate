@@ -25,7 +25,7 @@ class FilesPage extends React.Component {
     ];
     return (
       <div>
-        <Breadcrumbs>{breadcrumbs}</Breadcrumbs>
+        <Breadcrumbs items={breadcrumbs} />
         <span>тут будет страница файлов</span>
       </div>
     );
