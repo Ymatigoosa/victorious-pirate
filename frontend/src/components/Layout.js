@@ -38,6 +38,14 @@ ListItemLink.contextTypes = {
 const avatarsyle = {
   marginBottom:'15px'
 };
+const papersontentstyle = {
+  display: 'flex',
+  flex: '1 0 auto',
+  flexDirection: 'column',
+  padding: 0,
+  width: '100%',
+  maxWidth: '960px'
+};
 
 class Layout extends React.Component {
   constructor(props) {
@@ -165,16 +173,12 @@ class Layout extends React.Component {
             ) : null}
           </List>
         </LeftNav>
-        <div className='Layout-body'>
-          <div className='Layout-content-centered' >
-            <div className='Layout-content' >
-              {content}
-            </div>
-          </div>
-        </div>
-        <div className='Layout-footer'>
+        <Paper style={papersontentstyle} >
+            {content}
+        </Paper>
+        {/*<div className='Layout-footer'>
           {'футер'}
-        </div>
+        </div>*/}
         {userDialog}
         {
           (() => {
