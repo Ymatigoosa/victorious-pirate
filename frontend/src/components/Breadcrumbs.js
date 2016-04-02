@@ -4,7 +4,7 @@ import { intersperse } from 'utils/Utils';
 const Breadcrumbs = ({items}) => {
   const enchantedchildren = intersperse(items, ' / ');
   return (
-    <div>
+    <div className='Breadcrumbs'>
       {enchantedchildren.map( (el, i) => (<span key={i}>{el}</span>) )}
     </div>
   );

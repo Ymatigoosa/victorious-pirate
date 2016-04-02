@@ -62,3 +62,20 @@ body {
   padding: 10px;
   align-items: center;
 }
+
+.ListItemDescription {
+    font-size: '14px';
+    line-height: '16px';
+    height: '16px';
+    margin: 0;
+    margin-top: 4px;
+    color: rgba(0, 0, 0, 0.54);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.Breadcrumbs {
+  background-color: #f5f5f5;
+  padding: 2px 5px;
+  border-radius: 5px;
+}

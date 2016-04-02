@@ -93,6 +93,7 @@ class Layout extends React.Component {
       },
       userActions,
       routeActions,
+      location
     } = this.props;
 
     const title = location.pathname.startsWith('/journal')

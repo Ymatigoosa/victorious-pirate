@@ -34,22 +34,30 @@ const iconButtonElement = (
   </IconButton>
 );
 
-class Terms extends React.Component {
+class Courses extends React.Component {
   constructor(props) {
     super(props);
 
-    //this.ref = https://victorious-pirate.firebaseio.com
-    this.ref = this.props.firebaseService.ref.child('academic-terms');
+    this.writeRef = this.props.firebaseService.ref
+      .child('courses');
+
+    this.ref = this.writeRef
+      .orderByChild('academicTermUid')
+      .equalTo(this.props.params.academicTermUid);
+
     this.state = {
       items: null,
       search: '',
       dialogMode: 'hide',
       dialogName: '',
-      dialogItem: null
+      dialogDescription: '',
+      dialogItem: null,
+      academicTerm: null
     };
   }
   componentWillMount() {
     this.bindAsArray(this.ref, 'items', (error) => console.error(error));
+    this.bindAsObject(this.props.firebaseService.ref.child('academic-terms').child(this.props.params.academicTermUid), 'academicTerm', (error) => console.error(error));
   }
   componentWillUnmount() {
     //this.unbind('items');
@@ -60,28 +68,36 @@ class Terms extends React.Component {
   onDialogNameChange(e) {
     this.setState({dialogName: e.target.value})
   }
+  onDialogDescriptionChange(e) {
+    this.setState({dialogDescription: e.target.value})
+  }
   onCreate() {
-    this.ref.push({
-      name: this.state.dialogName
+    this.writeRef.push({
+      name: this.state.dialogName,
+      description: this.state.dialogDescription,
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onDialogClose();
   }
   onSave(key) {
-    this.ref.child(key).set({
-      name: this.state.dialogName
+    this.writeRef.child(key).set({
+      name: this.state.dialogName,
+      description: this.state.dialogDescription,
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onDialogClose();
   }
   onDelete(item) {
     const key = item['.key'];
-    if (confirm(`Вы действительно хотите удалить семестр "${item.name}"?\nОтменить это действие невозможно!`)) {
-      this.ref.child(key).remove();
+    if (confirm(`Вы действительно хотите удалить предмет "${item.name}"?\nОтменить это действие невозможно!`)) {
+      this.writeRef.child(key).remove();
       this.onDialogClose();
     }
   }
   onDialogClose() {
     this.setState({
       dialogName: '',
+      dialogDescription: '',
       dialogMode: 'hide',
       dialogItem: null
     })
@@ -89,6 +105,7 @@ class Terms extends React.Component {
   onDialogOpenCreate() {
     this.setState({
       dialogName: '',
+      dialogDescription: '',
       dialogMode: 'create'
     })
   }
@@ -96,12 +113,13 @@ class Terms extends React.Component {
     const key = item['.key'];
     this.setState({
       dialogName: item.name,
+      dialogDescription: item.description,
       dialogMode: 'edit',
       dialogItem: item
     })
   }
   onListClick(academicTermUid) {
-    this.props.routeActions.push(`/journal/${academicTermUid}`);
+    this.props.routeActions.push(`/journal/${academicTermUid}/`);
   }
   canUserWrite() {
     return this.props.user.isInRole(['admin', 'clerk', 'teacher']);
@@ -121,14 +139,21 @@ class Terms extends React.Component {
       </ToggleDisplay>
     );
     return [
-      (<ListItem onTouchTap={this.onListClick.bind(this, key)} key={key+'_ListItem'} rightIconButton={rightIconMenu}>
-        <Highlighter search={search} text={item.name} />
-      </ListItem>),
+      (<ListItem
+        onTouchTap={this.onListClick.bind(this, key)}
+        key={key+'_ListItem'}
+        rightIconButton={rightIconMenu}>
+          <Highlighter search={search} text={item.name} />
+          <div className='ListItemDescription'>
+            <Highlighter search={search} text={item.description} />
+          </div>
+        </ListItem>
+      ),
       (<Divider key={key+'_Divider'}/>)
     ];
   }
   render_dialog() {
-    const { dialogMode, dialogName, dialogItem } = this.state;
+    const { dialogMode, dialogName, dialogDescription, dialogItem } = this.state;
     const key = dialogItem != null ? dialogItem['.key'] : '';
     var actions = [
       <FlatButton
@@ -171,6 +196,11 @@ class Terms extends React.Component {
           floatingLabelText="Название"
           value={dialogName}
           onChange={this.onDialogNameChange.bind(this)} />
+        <br />
+        <TextField
+          floatingLabelText="Описание"
+          value={dialogDescription}
+          onChange={this.onDialogDescriptionChange.bind(this)} />
           <ToggleDisplay if={dialogMode === 'edit'}>
             <div>
             <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, dialogItem)} />
@@ -179,15 +209,16 @@ class Terms extends React.Component {
       </Dialog>
   }
   render() {
-    const { search, items } = this.state;
+    const { search, items, academicTerm } = this.state;
+
+    const breadcrumbs = [
+      <Link to='/journal'>Журнал</Link>,
+      <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>
+    ];
 
     const filtered = search === ''
       ? items
-      : items.filter((value) => value.name.indexOf(search) >= 0);
-
-    const breadcrumbs = [
-      <Link to='/journal'>Журнал</Link>
-    ];
+      : items.filter((value) => value.name.indexOf(search) >= 0 || value.description.indexOf(search))
 
     return (
       <div>
@@ -200,9 +231,9 @@ class Terms extends React.Component {
           />
         </div>
         <List>
-          <Subheader>Выберите семестр</Subheader>
+          <Subheader>Выберите предмет</Subheader>
           <ToggleDisplay if={this.canUserWrite()}>
-            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новый семестр</ListItem>
+            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новый предмет</ListItem>
             <Divider />
           </ToggleDisplay>
           { filtered.map((i) => this.render_item(i)) }
@@ -212,7 +243,7 @@ class Terms extends React.Component {
     );
   }
 }
-reactMixin(Terms.prototype, ReactFireMixin);
+reactMixin(Courses.prototype, ReactFireMixin);
 
 function mapStateToProps(state, ownProps) {
   return {
@@ -229,4 +260,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Terms);
+export default connect(mapStateToProps, mapDispatchToProps)(Courses);
