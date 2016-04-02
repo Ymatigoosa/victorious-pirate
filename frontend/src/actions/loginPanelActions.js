@@ -48,17 +48,25 @@ export function cleanLogin() {
 }
 export function initAuth() {
   return (dispatch, getState) => {
+    console.log(`initAuth`);
     const { firebaseService } = getState();
-    console.log('initAuth');
     const authData = firebaseService.ref.getAuth();
-    if (authData != null)
-    {
-      dispatch(setUserLoad());
-      firebaseService.getUserFromFirebase(authData.uid, function (snap) {
-        //console.log('must be set user');
-        dispatch(setUser(snap.val()));
-      });
-    }
+
+    if (authData == null)
+      return;
+
+    const nowtimestamp = Date.now();
+    const timeforsessionleft = authData.expires*1000 - nowtimestamp - 2000;
+
+    console.log(`authData.expires*1000=${authData.expires*1000}, Date.now()=${nowtimestamp}, timeforsessionleft=${timeforsessionleft}`);
+    if (timeforsessionleft <= 0)
+      return;
+
+    dispatch(setUserLoad());
+    firebaseService.getUserFromFirebase(authData.uid, function (snap) {
+      //console.log('must be set user');
+      dispatch(setUser(snap.val()));
+    });
   }
 }
 export function login(externaldata) {
