@@ -24,6 +24,7 @@ import { push, replace, go, goForward, goBack } from 'react-router-redux';
 import TextField from 'material-ui/lib/text-field';
 import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
+import ToggleDisplay from 'react-toggle-display';
 
 const iconButtonElement = (
   <IconButton
@@ -75,8 +76,8 @@ class Terms extends React.Component {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить семестр "${item.name}"?\nОтменить это действие невозможно!`)) {
       this.ref.child(key).remove();
+      this.onDialogClose();
     }
-    this.onDialogClose();
   }
   onDialogClose() {
     this.setState({
@@ -99,17 +100,22 @@ class Terms extends React.Component {
       dialogItem: item
     })
   }
+  canUserWrite() {
+    return this.props.user.isInRole(['admin', 'clerk', 'teacher']);
+  }
   render_item(item) {
     const key = item['.key'];
     const { search } = this.state;
     const rightIconMenu = (
-      <IconMenu
-        iconButtonElement={iconButtonElement}
-        anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
-        targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-        <MenuItem onTouchTap={this.onDialogOpenEdit.bind(this, item)}>Редактировать</MenuItem>
-        <MenuItem onTouchTap={this.onDelete.bind(this, item)}>Удалить</MenuItem>
-      </IconMenu>
+      <ToggleDisplay if={this.canUserWrite()}>
+        <IconMenu
+          iconButtonElement={iconButtonElement}
+          anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
+          targetOrigin={{horizontal: 'right', vertical: 'top'}}>
+          <MenuItem onTouchTap={this.onDialogOpenEdit.bind(this, item)}>Редактировать</MenuItem>
+          <MenuItem onTouchTap={this.onDelete.bind(this, item)}>Удалить</MenuItem>
+        </IconMenu>
+      </ToggleDisplay>
     );
     return [
       (<ListItem key={key+'_ListItem'} rightIconButton={rightIconMenu}>
@@ -162,12 +168,11 @@ class Terms extends React.Component {
           floatingLabelText="Название"
           value={dialogName}
           onChange={this.onDialogNameChange.bind(this)} />
-        {dialogMode === 'edit'
-          ? <div>
-              <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, dialogItem)} />
+          <ToggleDisplay if={dialogMode === 'edit'}>
+            <div>
+            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, dialogItem)} />
             </div>
-          : <div></div>
-        }
+          </ToggleDisplay>
       </Dialog>
   }
   render() {
@@ -188,8 +193,10 @@ class Terms extends React.Component {
         </div>
         <List>
           <Subheader>Выберите семестр</Subheader>
-          <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новый семестр</ListItem>
-          <Divider />
+          <ToggleDisplay if={this.canUserWrite()}>
+            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новый семестр</ListItem>
+            <Divider />
+          </ToggleDisplay>
           { filtered.map((i) => this.render_item(i)) }
         </List>
         {this.render_dialog()}
