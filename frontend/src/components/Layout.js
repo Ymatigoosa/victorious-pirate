@@ -35,6 +35,10 @@ ListItemLink.contextTypes = {
   muiTheme: React.PropTypes.object.isRequired
 };
 
+const avatarsyle = {
+  marginBottom:'15px'
+};
+
 class Layout extends React.Component {
   constructor(props) {
     super(props);
@@ -119,7 +123,7 @@ class Layout extends React.Component {
           user={user.data}
           onLogout={logout} />;
 
-    const avatarsyle = {marginBottom:'15px'};
+
     const profileBtn = user.data == null
       ? <ListItem onTouchTap={toggleLoginDialog} primaryText="Войти" ><Avatar style={avatarsyle} icon={<Person />} /></ListItem>
       : user.data == 'load'
@@ -136,8 +140,9 @@ class Layout extends React.Component {
     };
 
     return (
-      <div>
+      <div className='Layout'>
         <AppBar
+          className='Layout-header'
           title={title}
           onLeftIconButtonTouchTap={toggleLeftNav} />
         <LeftNav
@@ -160,7 +165,16 @@ class Layout extends React.Component {
             ) : null}
           </List>
         </LeftNav>
-        <div style={{padding: '20px'}}>{content}</div>
+        <div className='Layout-body'>
+          <div className='Layout-content-centered' >
+            <div className='Layout-content' >
+              {content}
+            </div>
+          </div>
+        </div>
+        <div className='Layout-footer'>
+          {'футер'}
+        </div>
         {userDialog}
         {
           (() => {
