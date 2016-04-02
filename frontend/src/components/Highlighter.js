@@ -1,3 +1,4 @@
+import React from 'react';
 import Highlight from 'react-highlighter';
 
 const Highlighter = ({search, text}) => (

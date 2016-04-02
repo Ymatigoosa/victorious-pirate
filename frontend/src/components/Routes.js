@@ -19,7 +19,7 @@ const Routes = (
     <Route path="/" component={LayoutContainer}>
       <IndexRedirect to="/journal" />
       <Route path="/journal">
-        <IndexRoute component={JournalPage} />
+        <IndexRoute component={Terms} />
       </Route>
       <Route
         path="/files"
