@@ -34,12 +34,12 @@ const iconButtonElement = (
   </IconButton>
 );
 
-class Courses extends React.Component {
+class StudentGroups extends React.Component {
   constructor(props) {
     super(props);
 
     this.writeRef = this.props.firebaseService.ref
-      .child('courses');
+      .child('student-groups');
 
     this.ref = this.writeRef
       .orderByChild('academicTermUid')
@@ -52,12 +52,14 @@ class Courses extends React.Component {
       dialogName: '',
       dialogDescription: '',
       dialogItem: null,
-      academicTerm: null
+      academicTerm: null,
+      course: null
     };
   }
   componentWillMount() {
     this.bindAsArray(this.ref, 'items', (error) => console.error(error));
     this.bindAsObject(this.props.firebaseService.ref.child('academic-terms').child(this.props.params.academicTermUid), 'academicTerm', (error) => console.error(error));
+    this.bindAsObject(this.props.firebaseService.ref.child('courses').child(this.props.params.courseUid), 'course', (error) => console.error(error));
   }
   componentWillUnmount() {
     //this.unbind('items');
@@ -89,7 +91,7 @@ class Courses extends React.Component {
   }
   onDelete(item) {
     const key = item['.key'];
-    if (confirm(`Вы действительно хотите удалить предмет "${item.name}"?\nОтменить это действие невозможно!`)) {
+    if (confirm(`Вы действительно хотите удалить группу "${item.name}"?\nОтменить это действие невозможно!`)) {
       this.writeRef.child(key).remove();
       this.onDialogClose();
     }
@@ -118,8 +120,8 @@ class Courses extends React.Component {
       dialogItem: item
     })
   }
-  onListClick(academicTermUid, courceUid) {
-    this.props.routeActions.push(`/journal/${academicTermUid}/${courceUid}`);
+  onListClick(academicTermUid, courceUid, studentGroupUid) {
+    this.props.routeActions.push(`/journal/${academicTermUid}/${courceUid}/${studentGroupUid}`);
   }
   canUserWrite() {
     return this.props.user.isInRole(['admin', 'clerk', 'teacher']);
@@ -140,7 +142,7 @@ class Courses extends React.Component {
     );
     return [
       (<ListItem
-        onTouchTap={this.onListClick.bind(this, this.props.params.academicTermUid, key)}
+        onTouchTap={this.onListClick.bind(this, this.props.params.academicTermUid, this.props.params.courseUid, key)}
         key={key+'_ListItem'}
         rightIconButton={rightIconMenu}>
           <Highlighter search={search} text={item.name} />
@@ -209,11 +211,12 @@ class Courses extends React.Component {
       </Dialog>
   }
   render() {
-    const { search, items, academicTerm } = this.state;
+    const { search, items, academicTerm, course } = this.state;
 
     const breadcrumbs = [
       <Link to='/journal'>Журнал</Link>,
-      <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>
+      <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>,
+      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}`}>{course == null ? '...'  : course.name}</Link>
     ];
 
     const filtered = search === ''
@@ -231,9 +234,9 @@ class Courses extends React.Component {
           />
         </div>
         <List>
-          <Subheader>Выберите предмет</Subheader>
+          <Subheader>Выберите группу</Subheader>
           <ToggleDisplay if={this.canUserWrite()}>
-            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новый предмет</ListItem>
+            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={this.onDialogOpenCreate.bind(this)}>Новая группа</ListItem>
             <Divider />
           </ToggleDisplay>
           { filtered.map((i) => this.render_item(i)) }
@@ -243,7 +246,7 @@ class Courses extends React.Component {
     );
   }
 }
-reactMixin(Courses.prototype, ReactFireMixin);
+reactMixin(StudentGroups.prototype, ReactFireMixin);
 
 function mapStateToProps(state, ownProps) {
   return {
@@ -260,4 +263,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Courses);
+export default connect(mapStateToProps, mapDispatchToProps)(StudentGroups);
