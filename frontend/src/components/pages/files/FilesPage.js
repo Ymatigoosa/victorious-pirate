@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+import Breadcrumbs from 'components/Breadcrumbs';
 
 class FilesPage extends React.Component {
   constructor(props) {
@@ -20,12 +21,11 @@ class FilesPage extends React.Component {
   render() {
     const breadcrumbs = [
       <Link to='/files'>Файловый архив</Link>,
-      <span> / </span>,
-      <span>123</span>
+      '123'
     ];
     return (
       <div>
-        {this.renderBreadcrumbs(breadcrumbs)}
+        <Breadcrumbs>{breadcrumbs}</Breadcrumbs>
         <span>тут будет страница файлов</span>
       </div>
     );

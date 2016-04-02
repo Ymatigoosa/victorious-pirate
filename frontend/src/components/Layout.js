@@ -21,7 +21,7 @@ import * as Colors from 'material-ui/lib/styles/colors';
 
 import LoginDialog from 'components/LoginDialog'
 import ProfileDialog from 'components/ProfileDialog'
-import isNullOrWhitespace from 'utils/isNullOrWhitespace'
+import { isNullOrWhitespace } from 'utils/Utils'
 import config from 'config';
 
 const ListItemLink = (props, context) => {
