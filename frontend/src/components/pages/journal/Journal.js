@@ -349,7 +349,7 @@ class Journal extends React.Component {
                                 />
                               </TableRowColumn>;
                     } else {
-                      <TableRowColumn style={s}>{v === 0 ? '' : v}</TableRowColumn>;
+                      return <TableRowColumn key={`${mk}`} style={s}>{v === 0 ? '' : v}</TableRowColumn>;
                     }
                   }
                 })
@@ -479,7 +479,7 @@ class Journal extends React.Component {
     return <Table
               height='500px'
               style={{width: 'auto'}}
-              wrapperStyle={{position: 'relative', overflow: 'scroll', width: 'auto'}}
+              wrapperStyle={{position: 'relative', overflow: 'auto', width: 'auto'}}
               bodyStyle={{ overflowX: undefined, overflowY: undefined }}
               selectable={false}
               multiSelectable={false}
