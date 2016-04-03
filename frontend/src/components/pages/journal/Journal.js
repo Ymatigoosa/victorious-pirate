@@ -510,10 +510,12 @@ class Journal extends React.Component {
         <div style={{padding:'20px'}}>
           <Breadcrumbs items={breadcrumbs}  />
           <br />
+          <ToggleDisplay if={this.canUserWrite()} >
           <div>
             <RaisedButton icon={<AddCircleIcon />} label='Добавить студента' onMouseUp={this.onStudentDialogOpenCreate.bind(this)} />
             <RaisedButton icon={<AddCircleIcon />} label='Добавить занятие' onMouseUp={this.onDateDialogOpenCreate.bind(this)} />
           </div>
+          </ToggleDisplay>
         </div>
         {this.render_table()}
         {this.render_studentsDialog()}
