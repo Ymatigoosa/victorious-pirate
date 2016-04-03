@@ -22,3 +22,12 @@ export function intersperse(array, something) {
   }
   return result
 }
+
+export function delAll(snapshot) {
+  const hastable = snapshot.val();
+  const ref = snapshot.ref();
+  const update = Object.keys(hastable).reduce((result, k) => {
+    result[k] = null;
+  }, {});
+  ref.update(update);
+}
