@@ -273,6 +273,7 @@ class Journal extends React.Component {
      : valueasint;
     this.studentMarksWriteRef.child(this.createMarkKey(studentkey, datekey)).set({
       studentGroupUid: this.props.params.studentGroupUid,
+      courseUid: this.props.params.courseUid,
       dateUid: datekey,
       studentUid: studentkey,
       value: newvalue
@@ -495,12 +496,13 @@ class Journal extends React.Component {
             </Table>
   }
   render() {
-    const { academicTerm, course } = this.state;
+    const { academicTerm, course, studentGroup } = this.state;
 
     const breadcrumbs = [
       <Link to='/journal'>Журнал</Link>,
       <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>,
-      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}`}>{course == null ? '...'  : course.name}</Link>
+      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}`}>{course == null ? '...'  : course.name}</Link>,
+      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}/${this.props.params.studentGroupUid}`}>{studentGroup == null ? '...'  : studentGroup.name}</Link>
     ];
 
     return (
