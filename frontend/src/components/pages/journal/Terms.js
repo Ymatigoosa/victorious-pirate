@@ -191,8 +191,8 @@ class Terms extends React.Component {
 
     return (
       <div>
+        <Breadcrumbs items={breadcrumbs} />
         <div style={{padding:'20px'}}>
-          <Breadcrumbs items={breadcrumbs}  />
           <TextField
             floatingLabelText="Поиск"
             value={search}

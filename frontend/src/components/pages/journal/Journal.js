@@ -506,8 +506,8 @@ class Journal extends React.Component {
 
     return (
       <div>
+        <Breadcrumbs items={breadcrumbs} />
         <div style={{padding:'20px'}}>
-          <Breadcrumbs items={breadcrumbs}  />
           <br />
           <ToggleDisplay if={this.canUserWrite()} >
           <div>
