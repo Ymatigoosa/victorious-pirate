@@ -28,7 +28,6 @@ import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TableBody from 'material-ui/lib/table/table-body';
 import TextField from 'material-ui/lib/text-field';
 
-
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { push, replace, go, goForward, goBack } from 'react-router-redux';
@@ -477,22 +476,20 @@ class Journal extends React.Component {
       return null;
     const ordereddates = dates.sort((a, b) => a.timestamp > b.timestamp);
     return <Table
+              height='500px'
+              style={{width: 'auto'}}
+              wrapperStyle={{position: 'relative', overflow: 'scroll', width: 'auto'}}
+              bodyStyle={{ overflowX: undefined, overflowY: undefined }}
               selectable={false}
               multiSelectable={false}
             >
-              <TableHeader
-                displaySelectAll={false}
-                adjustForCheckbox={false}
-                enableSelectAll={false}
-              >
-                {this.render_header(ordereddates)}
-              </TableHeader>
               <TableBody
                 displayRowCheckbox={false}
                 deselectOnClickaway={false}
                 showRowHover={false}
                 stripedRows={false}
               >
+                {this.render_header(ordereddates)}
                 {students.map( (student) => this.render_row(ordereddates, student, marks))}
               </TableBody>
             </Table>

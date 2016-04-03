@@ -39,6 +39,7 @@ class MarkEditor extends React.Component {
         <TextField
           id={id}
           value={value}
+          fullWidth={true}
           onKeyDown={this.handleEnterKeyDown.bind(this)}
           onBlur={this.onBlur.bind(this)}
           onChange={this.onChange.bind(this)}
