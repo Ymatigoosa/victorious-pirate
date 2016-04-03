@@ -349,7 +349,7 @@ class Journal extends React.Component {
                                 />
                               </TableRowColumn>;
                     } else {
-                      <TableRowColumn style={s}>{mark.value}</TableRowColumn>;
+                      <TableRowColumn style={s}>{v === 0 ? '' : v}</TableRowColumn>;
                     }
                   }
                 })
