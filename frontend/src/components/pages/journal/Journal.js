@@ -288,8 +288,11 @@ class Journal extends React.Component {
             <TableHeaderColumn ></TableHeaderColumn>
             {
               ordereddates.map((date) => {
+                const s = !date.isSum
+                  ? studentcellstyle
+                  : {...studentcellstyle, backgroundColor: Colors.grey100}
                 const d = new Date(date.timestamp);
-                return <TableHeaderColumn key={date['.key']} style={date.isSum ? {backgroundColor: Colors.grey100} : {}} >
+                return <TableHeaderColumn key={date['.key']} style={s} >
                           {`${d.getDate()}.${d.getMonth()+1}`}
                           <ToggleDisplay if={this.canUserWrite()}>
                             <IconMenu
@@ -325,22 +328,20 @@ class Journal extends React.Component {
                 ordereddates.map((date) => {
                   const sk = student['.key'];
                   const dk = date['.key'];
-                  const mark = marks[this.createMarkKey(sk, dk)];
+                  const mk = this.createMarkKey(sk, dk);
+                  const mark = marks[mk];
                   const s = date.isSum ? {backgroundColor: Colors.grey100} : {};
                   if (date.isSum) {
                     return <TableRowColumn style={s}>{acc}</TableRowColumn>;
                   } else {
-                    const mk = mark == void 0 || mark == null
-                      ? null
-                      : mark['.key'];
                     const v = mark == void 0 || mark == null
                      ? 0
                      : mark.value;
                     acc = acc + v;
                     if (this.canUserWrite()) {
-                      return  <TableRowColumn key={`${sk},${dk}`} style={s}>
+                      return  <TableRowColumn key={`${mk}`} style={s}>
                                 <TextField
-                                  id={`${sk},${dk}`}
+                                  id={`${mk}`}
                                   value={v === 0 ? '' : v}
                                   onChange={this.onMarkChange.bind(this, mk, dk, sk)}
                                 />
