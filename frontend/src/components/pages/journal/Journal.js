@@ -474,7 +474,7 @@ class Journal extends React.Component {
       //|| students/length === 0;
     if (cantberendered)
       return null;
-    const ordereddates = dates.sort((a, b) => a.timestamp > b.timestamp);
+    const ordereddates = dates.sort((a, b) => a.timestamp - b.timestamp);
     return <Table
               height='500px'
               style={{width: 'auto'}}
