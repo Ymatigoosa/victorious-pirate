@@ -35,6 +35,9 @@ import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
 
+const studentcellstyle = {
+  textAlign: 'right'
+};
 const iconButtonElement = (
   <IconButton
     touch={true}
@@ -74,7 +77,6 @@ class Journal extends React.Component {
       dates: null,
       students: null,
       marks: null,
-      search: '',
       studentDialogMode: 'hide',
       studentDialogName: '',
       studentDialogItem: null,
@@ -110,6 +112,8 @@ class Journal extends React.Component {
     this.setState({studentDialogName: e.target.value})
   }
   createMarksForEmptyStudent(newStudentKey) {
+    // obsolete
+    const { dates } = this.state;
     return dates.filter((i) => i.IsSum === false).reduce((result, date) =>{
       const newkey = this.studentMarksWriteRef.push().key();
       result[newkey] = {
@@ -117,30 +121,25 @@ class Journal extends React.Component {
         courseUid: this.props.params.courseUid,
         dateUid: date['.key'],
         studentUid: newStudentKey,
-        value: 0,
+        value: 0
       };
+      return result;
     }, {});
   }
   createMarksForRemoveStudent(studentKey) {
+    // obsolete
+    const { marks } = this.state;
     return marks.filter((i) => i.studentUid === studentKey).reduce((result, mark) =>{
       const k = mark['.key'];
       result[k] = null;
+      return result
     }, {});
   }
   onStudentCreate() {
-    const newkey = this.studentsWriteRef.push().key();
-
-    var update = {
-      'students': {
-        [newkey]: {
-          name: this.state.dialogName,
-          studentGroupUid: this.props.params.studentGroupUid
-        }
-      },
-      'student-marks': this.createMarksForEmptyStudent(newkey)
-    };
-    console.log(update);
-    this.ref.update(update);
+    this.studentsWriteRef.push({
+      name: this.state.studentDialogName,
+      studentGroupUid: this.props.params.studentGroupUid
+    });
     this.onStudentDialogClose();
   }
   onStudentSave(item) { // тут был key сейчас item
@@ -161,7 +160,8 @@ class Journal extends React.Component {
         'student-marks': this.createMarksForRemoveStudent(key)
       };
       console.log(update);
-      this.ref.update(update);
+      this.studentsWriteRef.update(update['students']);
+      this.studentMarksWriteRef.update(update['student-marks']);
       this.onStudentDialogClose();
     }
   }
@@ -179,7 +179,6 @@ class Journal extends React.Component {
     })
   }
   onStudentDialogOpenEdit(item) {
-    const key = item['.key'];
     this.setState({
       studentDialogName: item.name,
       studentDialogMode: 'edit',
@@ -197,6 +196,8 @@ class Journal extends React.Component {
     this.setState({dateDialogIsSum: checked});
   }
   createMarksForEmptyDate(newDateKey) {
+    // obsolete
+    const { students } = this.state;
     return students.reduce((result, student) =>{
       const newkey = this.studentMarksWriteRef.push().key();
       result[newkey] = {
@@ -206,52 +207,46 @@ class Journal extends React.Component {
         studentUid: student['.key'],
         value: 0,
       };
+      return result;
     }, {});
   }
   createMarksForRemoveDate(dateKey) {
+    const { marks } = this.state;
     return marks.filter((i) => i.dateUid === dateKey).reduce((result, date) =>{
       const k = date['.key'];
       result[k] = null;
+      return result;
     }, {});
   }
   onDateCreate() {
-    const newkey = this.datesWriteRef.push().key();
-
-    var update = {
-      'course-dates': {
-        [newkey]: {
-          isSum: this.state.dateDialogIsSum,
-          timestamp: this.state.dateDialogDate.getTime()
-        }
-      },
-      'student-marks': this.createMarksForEmptyDate(newkey)
-    };
-    console.log(update);
-    this.ref.update(update);
+    const newkey = this.datesWriteRef.push({
+      isSum: this.state.dateDialogIsSum,
+      timestamp: this.state.dateDialogDate.getTime(),
+      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid)
+    });
     this.onDateDialogClose();
   }
   onDateSave(item) { // тут был key сейчас item
     const key = item['.key'];
     this.datesWriteRef.child(key).set({
       isSum: this.state.dateDialogIsSum,
-      timestamp: this.state.dateDialogDate.getTime()
+      timestamp: this.state.dateDialogDate.getTime(),
+      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid)
     });
     this.onDateDialogClose();
   }
-  onDateDelete(item) {// закончил тут
+  onDateDelete(item) {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить занятие "${new Date(item.timestamp).toString()}"?\nОтменить это действие невозможно!`)) {
       var update = {
         'course-dates': {
-          [newkey]: {
-            isSum: this.state.dateDialogIsSum,
-            timestamp: this.state.dateDialogDate.getTime()
-          }
+          [key]: null
         },
-        'student-marks': this.createMarksForEmptyDate(newkey)
+        'student-marks': this.createMarksForRemoveDate(key)
       };
       console.log(update);
-      this.ref.update(update);
+      this.datesWriteRef.update(update['course-dates']);
+      this.studentMarksWriteRef.update(update['student-marks']);
       this.onDateDialogClose();
     }
   }
@@ -277,21 +272,26 @@ class Journal extends React.Component {
       dateDialogMode: 'edit',
       dateDialogDate: new Date(item.timestamp),
       dateDialogIsSum: item.isSum,
-      dateDialogItem: item,
+      dateDialogItem: item
     })
   }
 
 
 
   // marks
-  onMarkChange(item, e) {
-    const key = item['.key'];
+  onMarkChange(markkey, datekey, studentkey, e) {
+    const key = markkey == null
+      ? this.studentMarksWriteRef.push().key()
+      : markkey;
     const valueasint = parseInt(e.target.value);
     const newvalue =  Number.isNaN(valueasint)
      ? 0
      : valueasint;
     this.studentMarksWriteRef.child(key).set({
-      ...item,
+      studentGroupUid: this.props.params.studentGroupUid,
+      courseUid: this.props.params.courseUid,
+      dateUid: datekey,
+      studentUid: studentkey,
       value: newvalue
     });
   }
@@ -307,8 +307,8 @@ class Journal extends React.Component {
             {
               ordereddates.map((date) => {
                 const d = new Date(date.timestamp);
-                return <TableHeaderColumn style={date.isSum ? {backgroundColor: Colors.grey100} : {}} >
-                          {`${d.getDate()}.${d.getMonth()}`}
+                return <TableHeaderColumn key={date['.key']} style={date.isSum ? {backgroundColor: Colors.grey100} : {}} >
+                          {`${d.getDate()}.${d.getMonth()+1}`}
                           <ToggleDisplay if={this.canUserWrite()}>
                             <IconMenu
                               iconButtonElement={iconButtonElement}
@@ -326,8 +326,8 @@ class Journal extends React.Component {
   }
   render_row(ordereddates, student, marks) {
     var acc = 0;
-    return <TableRow>
-              <TableHeaderColumn>
+    return <TableRow key={student['.key']}>
+              <TableHeaderColumn style={studentcellstyle}>
                 {student.name}
                 <ToggleDisplay if={this.canUserWrite()}>
                   <IconMenu
@@ -343,19 +343,24 @@ class Journal extends React.Component {
                 ordereddates.map((date) => {
                   const sk = student['.key'];
                   const dk = date['.key'];
-                  const mark = marks.filter((m) => m.studentUid === sk && m.courseUid === dk)[0];
+                  const mark = marks.filter((m) => m.studentUid === sk && m.dateUid === dk)[0];
                   const s = date.isSum ? {backgroundColor: Colors.grey100} : {};
-                  if (mark == void 0 || mark == null) {
-                    return <TableRowColumn style={s}></TableRowColumn>;
-                  } else if (date.isSum) {
+                  if (date.isSum) {
                     return <TableRowColumn style={s}>{acc}</TableRowColumn>;
                   } else {
-                    acc = acc + mark.value;
+                    const mk = mark == void 0 || mark == null
+                      ? null
+                      : mark['.key'];
+                    const v = mark == void 0 || mark == null
+                     ? 0
+                     : mark.value;
+                    acc = acc + v;
                     if (this.canUserWrite()) {
-                      return  <TableRowColumn style={s}>
+                      return  <TableRowColumn key={`${sk},${dk}`} style={s}>
                                 <TextField
-                                  value={mark.value}
-                                  onChange={this.onMarkChange.bind(mark, e)}
+                                  id={`${sk},${dk}`}
+                                  value={v === 0 ? '' : v}
+                                  onChange={this.onMarkChange.bind(this, mk, dk, sk)}
                                 />
                               </TableRowColumn>;
                     } else {
@@ -475,8 +480,40 @@ class Journal extends React.Component {
         </ToggleDisplay>
       </Dialog>
   }
+  render_table(){
+    const { dates, students, marks } = this.state;
+    //console.log(this.state);
+    const cantberendered = !Array.isArray(dates)
+      || !Array.isArray(students)
+      || !Array.isArray(marks);
+      //|| dates.length === 0
+      //|| students/length === 0;
+    if (cantberendered)
+      return null;
+    const ordereddates = dates.sort((a, b) => a.timestamp > b.timestamp);
+    return <Table
+              selectable={false}
+              multiSelectable={false}
+            >
+              <TableHeader
+                displaySelectAll={false}
+                adjustForCheckbox={false}
+                enableSelectAll={false}
+              >
+                {this.render_header(ordereddates)}
+              </TableHeader>
+              <TableBody
+                displayRowCheckbox={false}
+                deselectOnClickaway={false}
+                showRowHover={false}
+                stripedRows={false}
+              >
+                {students.map( (student) => this.render_row(ordereddates, student, marks))}
+              </TableBody>
+            </Table>
+  }
   render() {
-    const { search, items, academicTerm, course } = this.state;
+    const { academicTerm, course } = this.state;
 
     const breadcrumbs = [
       <Link to='/journal'>Журнал</Link>,
@@ -494,6 +531,7 @@ class Journal extends React.Component {
             <RaisedButton icon={<AddCircleIcon />} label='Добавить занятие' onMouseUp={this.onDateDialogOpenCreate.bind(this)} />
           </div>
         </div>
+        {this.render_table()}
         {this.render_studentsDialog()}
         {this.render_dateDialog()}
       </div>
