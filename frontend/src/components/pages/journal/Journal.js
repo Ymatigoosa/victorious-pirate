@@ -92,7 +92,7 @@ class Journal extends React.Component {
   componentWillMount() {
     this.bindAsArray(this.datesReadRef, 'dates', (error) => console.error(error));
     this.bindAsArray(this.studentsReadRef, 'students', (error) => console.error(error));
-    this.bindAsArray(this.studentMarksReadRef, 'marks', (error) => console.error(error));
+    this.bindAsObject(this.studentMarksReadRef, 'marks', (error) => console.error(error));
 
     this.bindAsObject(this.ref.child('academic-terms').child(this.props.params.academicTermUid), 'academicTerm', (error) => console.error(error));
     this.bindAsObject(this.ref.child('courses').child(this.props.params.courseUid), 'course', (error) => console.error(error));
@@ -100,6 +100,9 @@ class Journal extends React.Component {
   }
   createDateForeignKey(studentGroupUid, courseUid) {
     return `(${studentGroupUid}, ${courseUid})`;
+  }
+  createMarkKey(studentUid, dateUid) {
+    return `(${studentUid}, ${dateUid})`;
   }
   componentWillUnmount() {
     //this.unbind('items');
@@ -111,27 +114,17 @@ class Journal extends React.Component {
   onStudentDialogNameChange(e) {
     this.setState({studentDialogName: e.target.value})
   }
-  createMarksForEmptyStudent(newStudentKey) {
-    // obsolete
-    const { dates } = this.state;
-    return dates.filter((i) => i.IsSum === false).reduce((result, date) =>{
-      const newkey = this.studentMarksWriteRef.push().key();
-      result[newkey] = {
-        studentGroupUid: this.props.params.studentGroupUid,
-        courseUid: this.props.params.courseUid,
-        dateUid: date['.key'],
-        studentUid: newStudentKey,
-        value: 0
-      };
-      return result;
-    }, {});
-  }
   createMarksForRemoveStudent(studentKey) {
     // obsolete
     const { marks } = this.state;
-    return marks.filter((i) => i.studentUid === studentKey).reduce((result, mark) =>{
-      const k = mark['.key'];
-      result[k] = null;
+    return Object.keys(marks).reduce((result, markkey) => {
+      if (markkey === '.key')
+        return result;
+      const mark = marks[markkey];
+      if (mark.studentUid !== studentKey || mark.studentGroupUid !== this.props.params.studentGroupUid)
+        return result;
+
+      result[markkey] = null;
       return result
     }, {});
   }
@@ -195,27 +188,17 @@ class Journal extends React.Component {
   onDateDialogIsSumChange(e, checked) {
     this.setState({dateDialogIsSum: checked});
   }
-  createMarksForEmptyDate(newDateKey) {
-    // obsolete
-    const { students } = this.state;
-    return students.reduce((result, student) =>{
-      const newkey = this.studentMarksWriteRef.push().key();
-      result[newkey] = {
-        studentGroupUid: this.props.params.studentGroupUid,
-        courseUid: this.props.params.courseUid,
-        dateUid: newDateKey,
-        studentUid: student['.key'],
-        value: 0,
-      };
-      return result;
-    }, {});
-  }
   createMarksForRemoveDate(dateKey) {
     const { marks } = this.state;
-    return marks.filter((i) => i.dateUid === dateKey).reduce((result, date) =>{
-      const k = date['.key'];
-      result[k] = null;
-      return result;
+    return Object.keys(marks).reduce((result, markkey) => {
+      if (markkey === '.key')
+        return result;
+      const mark = marks[markkey];
+      if (mark.dateUid !== dateKey || mark.studentGroupUid !== this.props.params.studentGroupUid)
+        return result;
+
+      result[markkey] = null;
+      return result
     }, {});
   }
   onDateCreate() {
@@ -287,9 +270,8 @@ class Journal extends React.Component {
     const newvalue =  Number.isNaN(valueasint)
      ? 0
      : valueasint;
-    this.studentMarksWriteRef.child(key).set({
+    this.studentMarksWriteRef.child(this.createMarkKey(studentkey, datekey)).set({
       studentGroupUid: this.props.params.studentGroupUid,
-      courseUid: this.props.params.courseUid,
       dateUid: datekey,
       studentUid: studentkey,
       value: newvalue
@@ -343,7 +325,7 @@ class Journal extends React.Component {
                 ordereddates.map((date) => {
                   const sk = student['.key'];
                   const dk = date['.key'];
-                  const mark = marks.filter((m) => m.studentUid === sk && m.dateUid === dk)[0];
+                  const mark = marks[this.createMarkKey(sk, dk)];
                   const s = date.isSum ? {backgroundColor: Colors.grey100} : {};
                   if (date.isSum) {
                     return <TableRowColumn style={s}>{acc}</TableRowColumn>;
@@ -484,8 +466,8 @@ class Journal extends React.Component {
     const { dates, students, marks } = this.state;
     //console.log(this.state);
     const cantberendered = !Array.isArray(dates)
-      || !Array.isArray(students)
-      || !Array.isArray(marks);
+      || students === null
+      || marks === null;
       //|| dates.length === 0
       //|| students/length === 0;
     if (cantberendered)
