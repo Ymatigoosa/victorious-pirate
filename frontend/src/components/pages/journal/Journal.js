@@ -477,10 +477,9 @@ class Journal extends React.Component {
       return null;
     const ordereddates = dates.sort((a, b) => a.timestamp - b.timestamp);
     return <Table
-              height='500px'
               style={{width: 'auto'}}
-              wrapperStyle={{position: 'relative', overflow: 'auto', width: 'auto'}}
-              bodyStyle={{ overflowX: undefined, overflowY: undefined }}
+              wrapperStyle={{overflow: void 0, width: 'auto'}}
+              bodyStyle={{ overflowX: void 0, overflowY: void 0 }}
               selectable={false}
               multiSelectable={false}
             >

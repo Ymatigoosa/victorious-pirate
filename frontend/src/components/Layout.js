@@ -150,6 +150,7 @@ class Layout extends React.Component {
       <div className='Layout'>
         <AppBar
           className='Layout-header'
+          style={{position: 'fixed'}}
           title={title}
           onLeftIconButtonTouchTap={toggleLeftNav} />
         <LeftNav
@@ -172,9 +173,9 @@ class Layout extends React.Component {
             ) : null}
           </List>
         </LeftNav>
-        <Paper style={papersontentstyle} >
+        <div className='Layout-body' >
             {children}
-        </Paper>
+        </div>
         {/*<div className='Layout-footer'>
           {'футер'}
         </div>*/}
