@@ -26,14 +26,16 @@ import TableRow from 'material-ui/lib/table/table-row';
 import TableHeader from 'material-ui/lib/table/table-header';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TableBody from 'material-ui/lib/table/table-body';
+import TextField from 'material-ui/lib/text-field';
+
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { push, replace, go, goForward, goBack } from 'react-router-redux';
-import TextField from 'material-ui/lib/text-field';
 import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
+import MarkEditor from 'components/pages/journal/MarkEditor';
 
 const studentcellstyle = {
   textAlign: 'right'
@@ -262,11 +264,11 @@ class Journal extends React.Component {
 
 
   // marks
-  onMarkChange(markkey, datekey, studentkey, e) {
+  onMarkChange(markkey, datekey, studentkey, value) {
     const key = markkey == null
       ? this.studentMarksWriteRef.push().key()
       : markkey;
-    const valueasint = parseInt(e.target.value);
+    const valueasint = parseInt(value);
     const newvalue =  Number.isNaN(valueasint)
      ? 0
      : valueasint;
@@ -332,15 +334,15 @@ class Journal extends React.Component {
                   const mark = marks[mk];
                   const s = date.isSum ? {backgroundColor: Colors.grey100} : {};
                   if (date.isSum) {
-                    return <TableRowColumn style={s}>{acc}</TableRowColumn>;
+                    return <TableRowColumn key={`${mk}`} style={s}>{acc}</TableRowColumn>;
                   } else {
                     const v = mark == void 0 || mark == null
                      ? 0
                      : mark.value;
                     acc = acc + v;
                     if (this.canUserWrite()) {
-                      return  <TableRowColumn key={`${mk}`} style={s}>
-                                <TextField
+                      return  <TableRowColumn key={`${mk}`}>
+                                <MarkEditor
                                   id={`${mk}`}
                                   value={v === 0 ? '' : v}
                                   onChange={this.onMarkChange.bind(this, mk, dk, sk)}
