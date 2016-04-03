@@ -5,6 +5,7 @@ import UsersPage from 'components/pages/users/UsersPage';
 import JournalPage from 'components/pages/journal/JournalPage';
 import Terms from 'components/pages/journal/Terms';
 import Courses from 'components/pages/journal/Courses';
+import Journal from 'components/pages/journal/Journal';
 import StudentGroups from 'components/pages/journal/StudentGroups';
 import FilesPage from 'components/pages/files/FilesPage';
 import LayoutContainer from 'components/LayoutContainer';
@@ -20,6 +21,9 @@ const Routes = (
           <IndexRoute component={Courses} />
           <Route path=":courseUid">
             <IndexRoute component={StudentGroups} />
+            <Route path=":studentGroupUid">
+              <IndexRoute component={Journal} />
+            </Route>
           </Route>
         </Route>
       </Route>
