@@ -27,6 +27,7 @@ import TableHeader from 'material-ui/lib/table/table-header';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TableBody from 'material-ui/lib/table/table-body';
 import TextField from 'material-ui/lib/text-field';
+import { deleteAllFromFirebase } from 'utils/Utils';
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -132,7 +133,8 @@ class Journal extends React.Component {
   onStudentCreate() {
     this.studentsWriteRef.push({
       name: this.state.studentDialogName,
-      studentGroupUid: this.props.params.studentGroupUid
+      studentGroupUid: this.props.params.studentGroupUid,
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onStudentDialogClose();
   }
@@ -140,7 +142,8 @@ class Journal extends React.Component {
     const key = item['.key'];
     this.studentsWriteRef.child(key).set({
       name: this.state.studentDialogName,
-      studentGroupUid: item.studentGroupUid
+      studentGroupUid: item.studentGroupUid,
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onStudentDialogClose(); // закончил тут
   }
@@ -206,7 +209,10 @@ class Journal extends React.Component {
     const newkey = this.datesWriteRef.push({
       isSum: this.state.dateDialogIsSum,
       timestamp: this.state.dateDialogDate.getTime(),
-      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid)
+      studentGroupUid: this.props.params.studentGroupUid,
+      courseUid: this.props.params.courseUid,
+      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid),
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onDateDialogClose();
   }
@@ -215,7 +221,10 @@ class Journal extends React.Component {
     this.datesWriteRef.child(key).set({
       isSum: this.state.dateDialogIsSum,
       timestamp: this.state.dateDialogDate.getTime(),
-      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid)
+      studentGroupUid: this.props.params.studentGroupUid,
+      courseUid: this.props.params.courseUid,
+      ['studentGroupUid-courseUid']: this.createDateForeignKey(this.props.params.studentGroupUid, this.props.params.courseUid),
+      academicTermUid: this.props.params.academicTermUid
     });
     this.onDateDialogClose();
   }
@@ -276,6 +285,7 @@ class Journal extends React.Component {
       courseUid: this.props.params.courseUid,
       dateUid: datekey,
       studentUid: studentkey,
+      academicTermUid: this.props.params.academicTermUid,
       value: newvalue
     });
   }

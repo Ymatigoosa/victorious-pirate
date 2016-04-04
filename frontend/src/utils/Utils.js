@@ -23,11 +23,16 @@ export function intersperse(array, something) {
   return result
 }
 
-export function delAll(snapshot) {
+export function deleteAllFromFirebase(snapshot) {
   const hastable = snapshot.val();
+  if (hastable === null)
+    return;
+
   const ref = snapshot.ref();
   const update = Object.keys(hastable).reduce((result, k) => {
     result[k] = null;
+    return result;
   }, {});
+  console.log(update);
   ref.update(update);
 }

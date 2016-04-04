@@ -25,6 +25,7 @@ import TextField from 'material-ui/lib/text-field';
 import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
+import { deleteAllFromFirebase } from 'utils/Utils';
 
 const iconButtonElement = (
   <IconButton
@@ -92,6 +93,10 @@ class StudentGroups extends React.Component {
   onDelete(item) {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить группу "${item.name}"?\nОтменить это действие невозможно!`)) {
+      const root = this.props.firebaseService.ref;
+      root.child('course-dates').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('students').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
       this.writeRef.child(key).remove();
       this.onDialogClose();
     }
