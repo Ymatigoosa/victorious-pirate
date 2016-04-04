@@ -2,7 +2,6 @@ import React from 'react';
 import { Router, Route, IndexRedirect, IndexRoute } from 'react-router';
 
 import UsersPage from 'components/pages/users/UsersPage';
-import JournalPage from 'components/pages/journal/JournalPage';
 import Terms from 'components/pages/journal/Terms';
 import Courses from 'components/pages/journal/Courses';
 import Journal from 'components/pages/journal/Journal';

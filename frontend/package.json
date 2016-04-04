@@ -102,6 +102,7 @@
     "redux-devtools-log-monitor": "^1.0.5",
     "redux-logger": "^2.6.1",
     "redux-multi": "^0.1.12",
-    "redux-thunk": "^2.0.1"
+    "redux-thunk": "^2.0.1",
+    "shallowequal": "^0.2.2"
   }
 }

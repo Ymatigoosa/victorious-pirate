@@ -27,15 +27,16 @@ import TableHeader from 'material-ui/lib/table/table-header';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TableBody from 'material-ui/lib/table/table-body';
 import TextField from 'material-ui/lib/text-field';
-import { deleteAllFromFirebase } from 'utils/Utils';
 
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { push, replace, go, goForward, goBack } from 'react-router-redux';
 import Breadcrumbs from 'components/Breadcrumbs';
+import JournalTable from 'components/pages/journal/JournalTable';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
 import MarkEditor from 'components/pages/journal/MarkEditor';
+import { deleteAllFromFirebase } from 'utils/Utils';
 
 const studentcellstyle = {
   textAlign: 'right'
@@ -76,9 +77,6 @@ class Journal extends React.Component {
       .equalTo(this.props.params.studentGroupUid);
 
     this.state = {
-      dates: null,
-      students: null,
-      marks: null,
       studentDialogMode: 'hide',
       studentDialogName: '',
       studentDialogItem: null,
@@ -92,10 +90,6 @@ class Journal extends React.Component {
     };
   }
   componentWillMount() {
-    this.bindAsArray(this.datesReadRef, 'dates', (error) => console.error(error));
-    this.bindAsArray(this.studentsReadRef, 'students', (error) => console.error(error));
-    this.bindAsObject(this.studentMarksReadRef, 'marks', (error) => console.error(error));
-
     this.bindAsObject(this.ref.child('academic-terms').child(this.props.params.academicTermUid), 'academicTerm', (error) => console.error(error));
     this.bindAsObject(this.ref.child('courses').child(this.props.params.courseUid), 'course', (error) => console.error(error));
     this.bindAsObject(this.ref.child('student-groups').child(this.props.params.studentGroupUid), 'studentGroup', (error) => console.error(error));
@@ -115,20 +109,6 @@ class Journal extends React.Component {
   // students
   onStudentDialogNameChange(e) {
     this.setState({studentDialogName: e.target.value})
-  }
-  createMarksForRemoveStudent(studentKey) {
-    // obsolete
-    const { marks } = this.state;
-    return Object.keys(marks).reduce((result, markkey) => {
-      if (markkey === '.key')
-        return result;
-      const mark = marks[markkey];
-      if (mark.studentUid !== studentKey || mark.studentGroupUid !== this.props.params.studentGroupUid)
-        return result;
-
-      result[markkey] = null;
-      return result
-    }, {});
   }
   onStudentCreate() {
     this.studentsWriteRef.push({
@@ -150,15 +130,9 @@ class Journal extends React.Component {
   onStudentDelete(item) {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить студента "${item.name}"?\nОтменить это действие невозможно!`)) {
-      var update = {
-        'students': {
-          [key]: null
-        },
-        'student-marks': this.createMarksForRemoveStudent(key)
-      };
-      console.log(update);
-      this.studentsWriteRef.update(update['students']);
-      this.studentMarksWriteRef.update(update['student-marks']);
+      this.studentsWriteRef.child(key).remove();
+      const root = this.props.firebaseService.ref;
+      root.child('student-marks').orderByChild('studentUid').equalTo(key).on('value', deleteAllFromFirebase);
       this.onStudentDialogClose();
     }
   }
@@ -192,19 +166,6 @@ class Journal extends React.Component {
   onDateDialogIsSumChange(e, checked) {
     this.setState({dateDialogIsSum: checked});
   }
-  createMarksForRemoveDate(dateKey) {
-    const { marks } = this.state;
-    return Object.keys(marks).reduce((result, markkey) => {
-      if (markkey === '.key')
-        return result;
-      const mark = marks[markkey];
-      if (mark.dateUid !== dateKey || mark.studentGroupUid !== this.props.params.studentGroupUid)
-        return result;
-
-      result[markkey] = null;
-      return result
-    }, {});
-  }
   onDateCreate() {
     const newkey = this.datesWriteRef.push({
       isSum: this.state.dateDialogIsSum,
@@ -231,15 +192,9 @@ class Journal extends React.Component {
   onDateDelete(item) {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить занятие "${new Date(item.timestamp).toString()}"?\nОтменить это действие невозможно!`)) {
-      var update = {
-        'course-dates': {
-          [key]: null
-        },
-        'student-marks': this.createMarksForRemoveDate(key)
-      };
-      console.log(update);
-      this.datesWriteRef.update(update['course-dates']);
-      this.studentMarksWriteRef.update(update['student-marks']);
+      const root = this.props.firebaseService.ref;
+      this.datesWriteRef.child(key).remove();
+      root.child('student-marks').orderByChild('dateUid').equalTo(key).on('value', deleteAllFromFirebase);
       this.onDateDialogClose();
     }
   }
@@ -294,78 +249,6 @@ class Journal extends React.Component {
   // other
   canUserWrite() {
     return this.props.user.isInRole(['admin', 'clerk', 'teacher']);
-  }
-  render_header(ordereddates) {
-    return <TableRow>
-            <TableHeaderColumn ></TableHeaderColumn>
-            {
-              ordereddates.map((date) => {
-                const s = !date.isSum
-                  ? studentcellstyle
-                  : {...studentcellstyle, backgroundColor: Colors.grey100}
-                const d = new Date(date.timestamp);
-                return <TableHeaderColumn key={date['.key']} style={s} >
-                          {`${d.getDate()}.${d.getMonth()+1}`}
-                          <ToggleDisplay if={this.canUserWrite()}>
-                            <IconMenu
-                              iconButtonElement={iconButtonElement}
-                              anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
-                              targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-                              <MenuItem onTouchTap={this.onDateDialogOpenEdit.bind(this, date)}>Редактировать</MenuItem>
-                              <MenuItem onTouchTap={this.onDateDelete.bind(this, date)}>Удалить</MenuItem>
-                            </IconMenu>
-                          </ToggleDisplay>
-                        </TableHeaderColumn>;
-              })
-            }
-            <TableHeaderColumn style={{backgroundColor: Colors.grey100}} >Итого</TableHeaderColumn>
-          </TableRow>
-  }
-  render_row(ordereddates, student, marks) {
-    var acc = 0;
-    return <TableRow key={student['.key']}>
-              <TableHeaderColumn style={studentcellstyle}>
-                {student.name}
-                <ToggleDisplay if={this.canUserWrite()}>
-                  <IconMenu
-                    iconButtonElement={iconButtonElement}
-                    anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
-                    targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-                    <MenuItem onTouchTap={this.onStudentDialogOpenEdit.bind(this, student)}>Редактировать</MenuItem>
-                    <MenuItem onTouchTap={this.onStudentDelete.bind(this, student)}>Удалить</MenuItem>
-                  </IconMenu>
-                </ToggleDisplay>
-              </TableHeaderColumn>
-              {
-                ordereddates.map((date) => {
-                  const sk = student['.key'];
-                  const dk = date['.key'];
-                  const mk = this.createMarkKey(sk, dk);
-                  const mark = marks[mk];
-                  const s = date.isSum ? {backgroundColor: Colors.grey100} : {};
-                  if (date.isSum) {
-                    return <TableRowColumn key={`${mk}`} style={s}>{acc}</TableRowColumn>;
-                  } else {
-                    const v = mark == void 0 || mark == null
-                     ? 0
-                     : mark.value;
-                    acc = acc + v;
-                    if (this.canUserWrite()) {
-                      return  <TableRowColumn key={`${mk}`}>
-                                <MarkEditor
-                                  id={`${mk}`}
-                                  value={v === 0 ? '' : v}
-                                  onChange={this.onMarkChange.bind(this, mk, dk, sk)}
-                                />
-                              </TableRowColumn>;
-                    } else {
-                      return <TableRowColumn key={`${mk}`} style={s}>{v === 0 ? '' : v}</TableRowColumn>;
-                    }
-                  }
-                })
-              }
-              <TableRowColumn style={{backgroundColor: Colors.grey100}}>{acc}</TableRowColumn>
-            </TableRow>
   }
   render_studentsDialog() {
     const { studentDialogMode, studentDialogName, studentDialogItem } = this.state;
@@ -475,35 +358,6 @@ class Journal extends React.Component {
         </ToggleDisplay>
       </Dialog>
   }
-  render_table(){
-    const { dates, students, marks } = this.state;
-    //console.log(this.state);
-    const cantberendered = !Array.isArray(dates)
-      || students === null
-      || marks === null;
-      //|| dates.length === 0
-      //|| students/length === 0;
-    if (cantberendered)
-      return null;
-    const ordereddates = dates.sort((a, b) => a.timestamp - b.timestamp);
-    return <Table
-              style={{width: 'auto'}}
-              wrapperStyle={{overflow: void 0, width: 'auto'}}
-              bodyStyle={{ overflowX: void 0, overflowY: void 0 }}
-              selectable={false}
-              multiSelectable={false}
-            >
-              <TableBody
-                displayRowCheckbox={false}
-                deselectOnClickaway={false}
-                showRowHover={false}
-                stripedRows={false}
-              >
-                {this.render_header(ordereddates)}
-                {students.map( (student) => this.render_row(ordereddates, student, marks))}
-              </TableBody>
-            </Table>
-  }
   render() {
     const { academicTerm, course, studentGroup } = this.state;
 
@@ -526,7 +380,19 @@ class Journal extends React.Component {
           </div>
           </ToggleDisplay>
         </div>
-        {this.render_table()}
+        {<JournalTable
+          firebaseRef={this.props.firebaseService.ref}
+          user={this.props.user}
+          params={this.props.params}
+          canUserWrite={this.canUserWrite.bind(this)}
+          onStudentDialogOpenEdit={this.onStudentDialogOpenEdit.bind(this)}
+          onDateDialogOpenEdit={this.onDateDialogOpenEdit.bind(this)}
+          onDateDelete={this.onDateDelete.bind(this)}
+          onStudentDelete={this.onStudentDelete.bind(this)}
+          createMarkKey={this.createMarkKey.bind(this)}
+          createDateForeignKey={this.createDateForeignKey.bind(this)}
+          onMarkChange={this.onMarkChange.bind(this)}
+          />}
         {this.render_studentsDialog()}
         {this.render_dateDialog()}
       </div>
