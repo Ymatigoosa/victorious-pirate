@@ -221,7 +221,7 @@ class StudentGroups extends React.Component {
     const breadcrumbs = [
       <Link to='/journal'>Журнал</Link>,
       <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>,
-      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}`}>{course == null ? '...'  : course.name}</Link>
+      (course == null ? '...'  : course.name)
     ];
 
     const filtered = search === ''

@@ -193,7 +193,7 @@ class Terms extends React.Component {
       : items.filter((value) => value.name.indexOf(search) >= 0);
 
     const breadcrumbs = [
-      <Link to='/journal'>Журнал</Link>
+      'Журнал'
     ];
 
     return (

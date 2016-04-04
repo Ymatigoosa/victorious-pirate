@@ -365,7 +365,7 @@ class Journal extends React.Component {
       <Link to='/journal'>Журнал</Link>,
       <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>,
       <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}`}>{course == null ? '...'  : course.name}</Link>,
-      <Link to={`/journal/${this.props.params.academicTermUid}/${this.props.params.courseUid}/${this.props.params.studentGroupUid}`}>{studentGroup == null ? '...'  : studentGroup.name}</Link>
+      (studentGroup == null ? '...'  : studentGroup.name)
     ];
 
     return (

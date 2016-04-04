@@ -217,7 +217,7 @@ class Courses extends React.Component {
 
     const breadcrumbs = [
       <Link to='/journal'>Журнал</Link>,
-      <Link to={`/journal/${this.props.params.academicTermUid}`}>{academicTerm == null ? '...'  : academicTerm.name}</Link>
+      (academicTerm == null ? '...'  : academicTerm.name)
     ];
 
     const filtered = search === ''
