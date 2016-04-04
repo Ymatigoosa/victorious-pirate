@@ -6,7 +6,7 @@ export const ActionTypes = keyMirror({
   SET_CATEGORY_CREATE_DIALOG: null,
   SET_FILE_UPLOAD_DIALOG: null,
   SET_FILE_CREATE_BY_TEMPLATE_DIALOG: null,
-  SET_FILE_UPLOAD_TEMPLATE: null,
+  SET_FILE_UPLOAD_TEMPLATE_DIALOG: null,
 });
 
 export const Actions = {
@@ -36,7 +36,7 @@ export const Actions = {
   }),
 
   setFileUploadTemplateDialogState: (playload) => ({
-    type: SET_FILE_UPLOAD_TEMPLATE,
+    type: SET_FILE_UPLOAD_TEMPLATE_DIALOG,
     playload: playload
   })
 
