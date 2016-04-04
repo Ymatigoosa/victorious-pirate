@@ -1,4 +1,5 @@
 import { TOGGLE_LEFT_NAV, TOGGLE_LOGIN_DIALOG, TOGGLE_PROFILE_DIALOG } from 'actions/layoutActions';
+import { createReducer } from 'utils/Utils';
 
 const initialState = {
   isNavOpen: false,
@@ -6,27 +7,20 @@ const initialState = {
   isProfileDialogOpen: false
 };
 
-export function layout(state = initialState, action) {
-  switch (action.type) {
-    case TOGGLE_LEFT_NAV:
-      return {
-        ...state,
-        isNavOpen: !state.isNavOpen
-      };
+export default reducer = createReducer(initialState, {
+  [TOGGLE_LEFT_NAV]: (state, action) => ({
+    ...state,
+    isNavOpen: !state.isNavOpen
+  }),
 
-    case TOGGLE_LOGIN_DIALOG:
-      return {
-        ...state,
-        isLoginDialogOpen: !state.isLoginDialogOpen
-      };
+  [TOGGLE_LOGIN_DIALOG]: (state, action) => ({
+    ...state,
+    isLoginDialogOpen: !state.isLoginDialogOpen
+  }),
 
-    case TOGGLE_PROFILE_DIALOG:
-      return {
-        ...state,
-        isProfileDialogOpen: !state.isProfileDialogOpen
-      };
+  [TOGGLE_PROFILE_DIALOG]: (state, action) => ({
+    ...state,
+    isProfileDialogOpen: !state.isProfileDialogOpen
+  })
 
-    default:
-      return state;
-  }
-}
+});

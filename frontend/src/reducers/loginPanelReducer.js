@@ -1,4 +1,5 @@
 import { CHANGE_EMAIL, CHANGE_PASSWORD, SET_LOGIN_ERROR, CLEAN_LOGIN, SET_EMAIL_ERROR, SET_PASSWORD_ERROR } from 'actions/loginPanelActions';
+import { createReducer } from 'utils/Utils';
 
 const initialState = {
   email: '',
@@ -8,44 +9,34 @@ const initialState = {
   wholeLoginError: ''
 };
 
-export function loginPanel(state = initialState, action) {
-  switch (action.type) {
-    case CHANGE_EMAIL:
-      return {
-        ...state,
-        email: action.playload,
-        emailError: ''
-      };
+export default reducer = createReducer(initialState, {
+  [CHANGE_EMAIL]: (state, action) => ({
+    ...state,
+    email: action.playload,
+    emailError: ''
+  }),
 
-    case CHANGE_PASSWORD:
-      return {
-        ...state,
-        password: action.playload,
-        passwordError: ''
-      };
+  [CHANGE_PASSWORD]: (state, action) => ({
+      ...state,
+      password: action.playload,
+      passwordError: ''
+  }),
 
-    case SET_EMAIL_ERROR:
-      return {
-        ...state,
-        emailError: action.playload
-      };
+  [SET_EMAIL_ERROR]: (state, action) => ({
+    ...state,
+    emailError: action.playload
+  }),
 
-    case SET_PASSWORD_ERROR:
-      return {
-        ...state,
-        passwordError: action.playload
-      };
+  [SET_PASSWORD_ERROR]: (state, action) => ({
+    ...state,
+    passwordError: action.playload
+  }),
 
-    case SET_LOGIN_ERROR:
-      return {
-        ...state,
-        wholeLoginError: action.playload
-      };
+  [SET_LOGIN_ERROR]: (state, action) => ({
+    ...state,
+    wholeLoginError: action.playload
+  }),
 
-    case CLEAN_LOGIN:
-      return initialState;
+  [CLEAN_LOGIN]: (state, action) => initialState,
 
-    default:
-      return state;
-  }
-}
+});
