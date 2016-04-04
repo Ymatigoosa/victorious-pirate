@@ -2,7 +2,7 @@ import FirebaseService from 'stores/FirebaseService';
 
 const initialState = new FirebaseService('https://victorious-pirate.firebaseio.com');
 
-export function firebaseService(state = initialState, action) {
+function reducer(state = initialState, action) {
   //console.log(123, state);
   switch (action.type) {
 
@@ -10,3 +10,5 @@ export function firebaseService(state = initialState, action) {
       return state;
   }
 }
+
+export default reducer;

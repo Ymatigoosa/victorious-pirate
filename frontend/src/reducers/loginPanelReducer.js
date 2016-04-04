@@ -9,7 +9,7 @@ const initialState = {
   wholeLoginError: ''
 };
 
-export default reducer = createReducer(initialState, {
+export default createReducer(initialState, {
   [CHANGE_EMAIL]: (state, action) => ({
     ...state,
     email: action.playload,

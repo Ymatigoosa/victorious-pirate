@@ -1,6 +1,6 @@
 export const SET_USER = 'SET_USER';
 export const SET_USER_LOAD = 'SET_USER_LOAD';
-export const CLEAN_USER = 'SET_USER';
+export const CLEAN_USER = 'CLEAN_USER';
 
 export function setUser(user) {
   return {

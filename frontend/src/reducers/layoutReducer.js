@@ -7,7 +7,7 @@ const initialState = {
   isProfileDialogOpen: false
 };
 
-export default reducer = createReducer(initialState, {
+export default createReducer(initialState, {
   [TOGGLE_LEFT_NAV]: (state, action) => ({
     ...state,
     isNavOpen: !state.isNavOpen

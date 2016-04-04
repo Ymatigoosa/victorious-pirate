@@ -2,8 +2,8 @@ import { combineReducers } from 'redux';
 import { routerReducer as routing } from 'react-router-redux';
 import layout from 'reducers/layoutReducer';
 import loginPanel from 'reducers/loginPanelReducer';
-import { user } from 'reducers/userReducer';
-import { firebaseService } from 'reducers/firebaseServiceReducer';
+import user from 'reducers/userReducer';
+import firebaseService from 'reducers/firebaseServiceReducer';
 
 /*console.log({
   layout,
