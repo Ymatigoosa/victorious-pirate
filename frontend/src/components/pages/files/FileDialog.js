@@ -138,11 +138,13 @@ class FileDialog extends React.Component {
           )}
           </DropDownMenu>
         </ToggleDisplay>
-        <Checkbox
-          label="Шаблон"
-          checked={isTemplate}
-          onCheck={(e, checked) => this.props.actions.setCategoryDialogState({isTemplate: checked})}
-        />
+        <ToggleDisplay if={templates === null || templates === void 0}>
+          <Checkbox
+            label="Шаблон"
+            checked={isTemplate}
+            onCheck={(e, checked) => this.props.actions.setCategoryDialogState({isTemplate: checked})}
+          />
+        </ToggleDisplay>
           <ToggleDisplay if={state === 'edit'}>
             <div>
             <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, itemKey, name, isTemplate, fpfile )} />

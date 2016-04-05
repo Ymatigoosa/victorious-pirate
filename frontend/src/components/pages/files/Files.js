@@ -41,43 +41,44 @@ class Files extends React.Component {
   constructor(props) {
     super(props);
 
-    this.documentCategoriesRef = this.props.firebaseService.ref
-      .child('document-categories');
+    this.documentsRef = this.props.firebaseService.ref
+      .child('documents');
   }
   componentWillMount() {
     this.bindAsArray(
-      this.documentCategoriesRef,
+      this.documentsRef,
       'items',
       (error) => console.error(error)
     );
 
-    //this.bindAsObject(
-    //  this.props.firebaseService.ref.child('academic-terms').child(this.props.params.academicTermUid),
-    //  'academicTerm',
-    //  (error) => console.error(error)
-    //);
+    this.bindAsObject(
+      this.props.firebaseService.ref.child('document-categories').child(this.props.params.categoryUid),
+      'category',
+      (error) => console.error(error)
+    );
   }
   shouldComponentUpdate(nextProps, nextState) {
     return this.state !== nextState
       || !shallowequal(this.props, nextProps);
   }
   componentWillUnmount() {
-    this.props.actions.setCategorySearch('');
+    this.props.actions.setFilesSearch('');
   }
 
-  onDelete(item) {
-    const key = item['.key'];
-    if (confirm(`Вы действительно хотите удалить категорию "${item.name}"?\nОтменить это действие невозможно!`)) {
-      this.props.actions.deleteCategory(key);
+  onDelete(itemKey, name, isTemplate, fpfile) {
+    const msg = isTemplate
+      ? `Вы действительно хотите удалить шаблон "${name}"?\nВсе файлы, использующие этот шаблон окажутся недоступны\nОтменить это действие невозможно!`
+      : `Вы действительно хотите удалить файл "${name}"?\nОтменить это действие невозможно!`
+    if (confirm(msg)) {
+      //console.log(key);
+      this.props.actions.deleteFile(itemKey, fpfile);
+      this.props.actions.setFileCreateByTemplateState(null);
     }
   }
 
-  onListClick(categoryUid) {
-    this.props.routeActions.push(`/files/${categoryUid}`);
-  }
-  canUserRead(item) {
-    return this.props.user.isInRole(['admin', 'clerk'])
-      || (item.allowedForTeachers && this.props.user.isInRole('teacher'));
+  onListClick(item) {
+    const key = item['.key'];
+    this.props.routeActions.push(`/files/${categoryUid}/${key}`);
   }
   render_item(item) {
     const key = item['.key'];
@@ -90,6 +91,7 @@ class Files extends React.Component {
           anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
           targetOrigin={{horizontal: 'right', vertical: 'top'}}>
           <MenuItem onTouchTap={() => this.props.actions.setCategoryDialogState({state: 'edit', itemKey: key, name: item.name, allowedForTeachers: item.allowedForTeachers}) }>Редактировать</MenuItem>
+          <MenuItem onTouchTap={() => {window.location = item.fpfile.url; }}>Скачать</MenuItem>
           <MenuItem onTouchTap={this.onDelete.bind(this, item)}>Удалить</MenuItem>
         </IconMenu>
     );
