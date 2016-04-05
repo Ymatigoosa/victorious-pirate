@@ -92,8 +92,8 @@ class Courses extends React.Component {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить предмет "${item.name}"?\nОтменить это действие невозможно!`)) {
       const root = this.props.firebaseService.ref;
-      root.child('course-dates').orderByChild('courseUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('student-marks').orderByChild('courseUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('course-dates').orderByChild('courseUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('courseUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.writeRef.child(key).remove();
       this.onDialogClose();
     }

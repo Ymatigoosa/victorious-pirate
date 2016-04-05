@@ -94,9 +94,9 @@ class StudentGroups extends React.Component {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить группу "${item.name}"?\nОтменить это действие невозможно!`)) {
       const root = this.props.firebaseService.ref;
-      root.child('course-dates').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('students').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('student-marks').orderByChild('studentGroupUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('course-dates').orderByChild('studentGroupUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('students').orderByChild('studentGroupUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('studentGroupUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.writeRef.child(key).remove();
       this.onDialogClose();
     }

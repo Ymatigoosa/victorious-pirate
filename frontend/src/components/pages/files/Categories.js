@@ -26,6 +26,7 @@ import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
 import { deleteAllFromFirebase } from 'utils/Utils';
+import shallowequal from 'shallowequal';
 
 const iconButtonElement = (
   <IconButton
@@ -35,43 +36,34 @@ const iconButtonElement = (
   </IconButton>
 );
 
-class Courses extends React.Component {
+class Categories extends React.Component {
   constructor(props) {
     super(props);
 
-    this.writeRef = this.props.firebaseService.ref
-      .child('courses');
-
-    this.ref = this.writeRef
-      .orderByChild('academicTermUid')
-      .equalTo(this.props.params.academicTermUid);
-
-    this.state = {
-      items: null,
-      search: '',
-      dialogMode: 'hide',
-      dialogName: '',
-      dialogDescription: '',
-      dialogItem: null,
-      academicTerm: null
-    };
+    this.documentCategoriesRef = this.props.firebaseService.ref
+      .child('document-categories');
   }
   componentWillMount() {
-    this.bindAsArray(this.ref, 'items', (error) => console.error(error));
-    this.bindAsObject(this.props.firebaseService.ref.child('academic-terms').child(this.props.params.academicTermUid), 'academicTerm', (error) => console.error(error));
+    this.bindAsArray(
+      this.documentCategoriesRef,
+      'items',
+      (error) => console.error(error)
+    );
+
+    //this.bindAsObject(
+    //  this.props.firebaseService.ref.child('academic-terms').child(this.props.params.academicTermUid),
+    //  'academicTerm',
+    //  (error) => console.error(error)
+    //);
+  }
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.state !== nextState
+      || !shallowequal(this.props, nextProps);
   }
   componentWillUnmount() {
     //this.unbind('items');
   }
-  onSearchChange(e) {
-    this.setState({search: e.target.value})
-  }
-  onDialogNameChange(e) {
-    this.setState({dialogName: e.target.value})
-  }
-  onDialogDescriptionChange(e) {
-    this.setState({dialogDescription: e.target.value})
-  }
+
   onCreate() {
     this.writeRef.push({
       name: this.state.dialogName,
@@ -92,8 +84,8 @@ class Courses extends React.Component {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить предмет "${item.name}"?\nОтменить это действие невозможно!`)) {
       const root = this.props.firebaseService.ref;
-      root.child('course-dates').orderByChild('courseUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('student-marks').orderByChild('courseUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('course-dates').orderByChild('courseUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('courseUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.writeRef.child(key).remove();
       this.onDialogClose();
     }
@@ -247,7 +239,7 @@ class Courses extends React.Component {
     );
   }
 }
-reactMixin(Courses.prototype, ReactFireMixin);
+reactMixin(Categories.prototype, ReactFireMixin);
 
 function mapStateToProps(state, ownProps) {
   return {
@@ -264,4 +256,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Courses);
+export default connect(mapStateToProps, mapDispatchToProps)(Categories);

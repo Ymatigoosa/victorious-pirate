@@ -132,7 +132,7 @@ class Journal extends React.Component {
     if (confirm(`Вы действительно хотите удалить студента "${item.name}"?\nОтменить это действие невозможно!`)) {
       this.studentsWriteRef.child(key).remove();
       const root = this.props.firebaseService.ref;
-      root.child('student-marks').orderByChild('studentUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('studentUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.onStudentDialogClose();
     }
   }
@@ -194,7 +194,7 @@ class Journal extends React.Component {
     if (confirm(`Вы действительно хотите удалить занятие "${new Date(item.timestamp).toString()}"?\nОтменить это действие невозможно!`)) {
       const root = this.props.firebaseService.ref;
       this.datesWriteRef.child(key).remove();
-      root.child('student-marks').orderByChild('dateUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('dateUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.onDateDialogClose();
     }
   }

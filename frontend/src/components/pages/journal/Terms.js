@@ -77,11 +77,11 @@ class Terms extends React.Component {
     const key = item['.key'];
     if (confirm(`Вы действительно хотите удалить семестр "${item.name}"?\nОтменить это действие невозможно!`)) {
       const root = this.props.firebaseService.ref;
-      root.child('course-dates').orderByChild('academicTermUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('courses').orderByChild('academicTermUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('student-groups').orderByChild('academicTermUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('students').orderByChild('academicTermUid').equalTo(key).on('value', deleteAllFromFirebase);
-      root.child('student-marks').orderByChild('academicTermUid').equalTo(key).on('value', deleteAllFromFirebase);
+      root.child('course-dates').orderByChild('academicTermUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('courses').orderByChild('academicTermUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('student-groups').orderByChild('academicTermUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('students').orderByChild('academicTermUid').equalTo(key).once('value', deleteAllFromFirebase);
+      root.child('student-marks').orderByChild('academicTermUid').equalTo(key).once('value', deleteAllFromFirebase);
       this.ref.child(key).remove();
       this.onDialogClose();
     }
