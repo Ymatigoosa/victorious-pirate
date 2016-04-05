@@ -23,7 +23,7 @@ export function intersperse(array, something) {
   return result
 }
 
-export function deleteAllFromFirebase(snapshot) {
+export function deleteAllFromFirebase(snapshot, cb) {
   const hastable = snapshot.val();
   if (hastable === null)
     return;
@@ -31,6 +31,7 @@ export function deleteAllFromFirebase(snapshot) {
   const ref = snapshot.ref();
   const update = Object.keys(hastable).reduce((result, k) => {
     result[k] = null;
+    cb && cb(hastable[k]);
     return result;
   }, {});
   console.log(update);

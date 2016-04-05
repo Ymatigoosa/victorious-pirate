@@ -7,13 +7,14 @@ import Courses from 'components/pages/journal/Courses';
 import Journal from 'components/pages/journal/Journal';
 import StudentGroups from 'components/pages/journal/StudentGroups';
 import FilesPage from 'components/pages/files/FilesPage';
+import Categories from 'components/pages/files/Categories';
 import LayoutContainer from 'components/LayoutContainer';
 
 //StudentGroups
 
 const Routes = (
     <Route path="/" component={LayoutContainer}>
-      <IndexRedirect to="/journal" />
+      <IndexRedirect to="/files" />
       <Route path="/journal">
         <IndexRoute component={Terms} />
         <Route path=":academicTermUid">
@@ -26,9 +27,9 @@ const Routes = (
           </Route>
         </Route>
       </Route>
-      <Route
-        path="/files"
-        component={FilesPage} />
+      <Route path="/files" >
+        <IndexRoute component={Categories} />
+      </Route>
       <Route
         path="/users"
         components={UsersPage} />

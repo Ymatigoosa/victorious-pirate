@@ -13,14 +13,13 @@ const initialState = {
   category_search: '',
   files_search: '',
   categoryDialog: {
-    key: '',
+    itemKey: '',
     state: 'hide',
     name: '',
-    description: '',
     allowedForTeachers: false
   },
   fileUploadDialog: {
-    key: '',
+    itemKey: '',
     state: 'hide',
     name: '',
     fpfile: {},
@@ -28,7 +27,7 @@ const initialState = {
     isTemplate: false
   },
   fileCreateByTemplateDialog: {
-    key: '',
+    itemKey: '',
     state: 'hide',
     name: '',
     categoryUid: '',

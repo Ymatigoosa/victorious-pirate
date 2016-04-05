@@ -4,6 +4,8 @@ import layout from 'reducers/layoutReducer';
 import loginPanel from 'reducers/loginPanelReducer';
 import user from 'reducers/userReducer';
 import firebaseService from 'reducers/firebaseServiceReducer';
+import filepicker from 'reducers/filepickerReducer';
+import files from 'reducers/filesReducer';
 
 /*console.log({
   layout,
@@ -18,7 +20,9 @@ const rootReducer = combineReducers({
   loginPanel,
   user,
   routing,
-  firebaseService
+  firebaseService,
+  files,
+  filepicker
 });
 
 export default rootReducer;
