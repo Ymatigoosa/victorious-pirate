@@ -1,4 +1,5 @@
 import { keyMirror } from 'keyMirror';
+import { deleteAllFromFirebase } from 'utils/Utils';
 
 export const ActionTypes = keyMirror({
   SET_CATTEGORY_SEARCH: null,
@@ -61,26 +62,15 @@ export const Actions = {
     dispatch(Actions.setCategoryCreateDialogState(null));
   },
 
-  saveUploadedFileFromDialog: () => (dispatch, getState) => {
+  saveUploadedFileFromDialog: ({ key, name, fpfile, categoryUid, isTemplate }) => (dispatch, getState) => {
     const {
-      firebaseService,
-      files: {
-        fileUploadDialog: {
-          key,
-          name,
-          downloadUrl,
-          categoryUid,
-          readUrl,
-          isTemplate
-        }
-      }
+      firebaseService
     } = getState();
 
     const newdata = {
       name,
-      downloadUrl,
+      fpfile,
       categoryUid,
-      readUrl,
       isTemplate
     };
     if (key !== null && key !== void 0) {
@@ -92,17 +82,9 @@ export const Actions = {
     dispatch(Actions.setFileUploadDialogState(null));
   },
 
-  saveFileFromTemplateDialog: () => (dispatch, getState) => {
+  saveFileFromTemplateDialog: ({ key, name, categoryUid, templateUid }) => (dispatch, getState) => {
     const {
-      firebaseService,
-      files: {
-        fileCreateByTemplateDialog: {
-          key,
-          name,
-          categoryUid,
-          templateUid
-        }
-      }
+      firebaseService
     } = getState();
 
     firebaseService.ref.child.child('documents').child(templateUid).once('value', (snapshot) => {
@@ -120,9 +102,20 @@ export const Actions = {
       } else {
         firebaseService.ref.child('documents').push(newdata);
       }
-
-      dispatch(Actions.setFileUploadDialogState(null));
     });
 
+  },
+
+  deleteCategory: (key) => (dispatch, getState) => {
+    const root = this.props.firebaseService.ref;
+    root.child('documents').orderByChild('categoryUid').equalTo(key).once('value', deleteAllFromFirebase);
+    root.child('document-categories').child(key).remove();
+    this.writeRef.child(key).remove();
+  },
+
+  deleteFile: (key) => (dispatch, getState) => {
+    const root = this.props.firebaseService.ref;
+    root.child('documents').child(key).remove();
+    this.writeRef.child(key).remove();
   }
 }

@@ -23,9 +23,8 @@ const initialState = {
     key: '',
     state: 'hide',
     name: '',
-    downloadUrl: '',
+    fpfile: {},
     categoryUid: '',
-    readUrl: '',
     isTemplate: false
   },
   fileCreateByTemplateDialog: {
