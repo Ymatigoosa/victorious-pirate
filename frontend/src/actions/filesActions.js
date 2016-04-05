@@ -5,8 +5,7 @@ export const ActionTypes = keyMirror({
   SET_CATTEGORY_SEARCH: null,
   SET_FILES_SEARCH: null,
   SET_CATEGORY_DIALOG: null,
-  SET_FILE_UPLOAD_DIALOG: null,
-  SET_FILE_CREATE_BY_TEMPLATE_DIALOG: null
+  SET_FILE_UPLOAD_DIALOG: null
 });
 
 export const Actions = {
@@ -30,21 +29,13 @@ export const Actions = {
     playload: playload
   }),
 
-  setFileCreateByTemplateState: (playload) => ({
-    type: ActionTypes.SET_FILE_CREATE_BY_TEMPLATE_DIALOG,
-    playload: playload
-  }),
-
-  saveCategoryFromDialog: () => (dispatch, getState) => {
+  saveCategoryFromDialog: ({
+    itemKey,
+    name,
+    allowedForTeachers
+  }) => (dispatch, getState) => {
     const {
-      firebaseService,
-      files: {
-        categoryDialog: {
-          itemKey,
-          name,
-          allowedForTeachers
-        }
-      }
+      firebaseService
     } = getState();
 
     const newdata = {
@@ -57,50 +48,35 @@ export const Actions = {
       firebaseService.ref.child('document-categories').push(newdata);
     }
 
-    dispatch(Actions.setCategoryDialogState(null));
+    
   },
 
-  saveUploadedFileFromDialog: ({ itemKey, name, fpfile, categoryUid, isTemplate }) => (dispatch, getState) => {
+  saveUploadedFileFromDialog: ({ itemKey, name, fpfile, categoryUid, isTemplate, templateUid }) => (dispatch, getState) => {
     const {
-      firebaseService
+      firebaseService,
+      filepicker
     } = getState();
 
     const newdata = {
       name,
       fpfile,
       categoryUid,
+      templateUid,
       isTemplate
     };
     if (!isNullOrWhitespace(itemKey)) {
-      firebaseService.ref.child('documents').child(itemKey).set(newdata);
+      firebaseService.ref.child('documents').child(itemKey).once('value', (snapshot) => {
+        const { fpfile, templateUid } = snapshot.val();
+        if (isNullOrWhitespace(templateUid)) {
+          filepicker.remove(fpfile);
+        }
+        firebaseService.ref.child('documents').child(itemKey).set(newdata);
+      });
     } else {
       firebaseService.ref.child('documents').push(newdata);
     }
 
-    dispatch(Actions.setFileUploadDialogState(null));
-  },
-
-  saveFileFromTemplateDialog: ({ itemKey, name, categoryUid, templateUid }) => (dispatch, getState) => {
-    const {
-      firebaseService
-    } = getState();
-
-    firebaseService.ref.child.child('documents').child(templateUid).once('value', (snapshot) => {
-      const { fpfile } = snapshot.val();
-
-      const newdata = {
-        name,
-        fpfile,
-        categoryUid,
-        isTemplate: false
-      };
-      if (!isNullOrWhitespace(itemKey)) {
-        firebaseService.ref.child('documents').child(itemKey).set(newdata);
-      } else {
-        firebaseService.ref.child('documents').push(newdata);
-      }
-    });
-
+    //dispatch(Actions.setFileUploadDialogState(null));
   },
 
   deleteCategory: (itemKey) => (dispatch, getState) => {
@@ -115,7 +91,7 @@ export const Actions = {
     root.child('document-categories').child(itemKey).remove();
   },
 
-  deleteFile: ({itemKey, fpfile}) => (dispatch, getState) => {
+  deleteFile: (itemKey, fpfile) => (dispatch, getState) => {
     const { filepicker, firebaseService } = getState();
     const root = firebaseService.ref;
     root.child('documents').child(itemKey).remove();

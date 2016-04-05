@@ -5,8 +5,7 @@ const {
   SET_CATTEGORY_SEARCH,
   SET_FILES_SEARCH,
   SET_CATEGORY_DIALOG,
-  SET_FILE_UPLOAD_DIALOG,
-  SET_FILE_CREATE_BY_TEMPLATE_DIALOG
+  SET_FILE_UPLOAD_DIALOG
 } = ActionTypes;
 
 const initialState = {
@@ -24,14 +23,8 @@ const initialState = {
     name: '',
     fpfile: {},
     categoryUid: '',
+    templateUid: '',
     isTemplate: false
-  },
-  fileCreateByTemplateDialog: {
-    itemKey: '',
-    state: 'hide',
-    name: '',
-    categoryUid: '',
-    templateUid: ''
   }
 };
 
@@ -58,14 +51,6 @@ export default createReducer(initialState, {
     ...state,
     categoryDialog: action.playload == null ? initialState.categoryDialog : {
       ...state.categoryDialog,
-      ...action.playload
-    }
-  }),
-
-  [SET_FILE_CREATE_BY_TEMPLATE_DIALOG]: (state, action) => ({
-    ...state,
-    fileCreateByTemplateDialog: action.playload == null ? initialState.fileCreateByTemplateDialog : {
-      ...state.fileCreateByTemplateDialog,
       ...action.playload
     }
   })

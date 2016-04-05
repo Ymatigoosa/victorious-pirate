@@ -12,7 +12,6 @@ import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
 import AddCircleIcon from 'material-ui/lib/svg-icons/content/add-circle';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
-import MenuItem from 'material-ui/lib/menus/menu-item';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import RaisedButton from 'material-ui/lib/raised-button';
@@ -28,8 +27,10 @@ import ToggleDisplay from 'react-toggle-display';
 import shallowequal from 'shallowequal';
 import { Actions } from 'actions/filesActions';
 import Checkbox from 'material-ui/lib/checkbox';
+import DropDownMenu from 'material-ui/lib/DropDownMenu';
+import MenuItem from 'material-ui/lib/menus/menu-item';
 
-class CategoriesDialog extends React.Component {
+class FileDialog extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -44,11 +45,14 @@ class CategoriesDialog extends React.Component {
     //this.unbind('items');
   }
 
-  onDelete(itemKey, name) {
-    if (confirm(`Вы действительно хотите удалить категорию "${name}"?\nОтменить это действие невозможно!`)) {
+  onDelete(itemKey, name, isTemplate, fpfile) {
+    const msg = isTemplate
+      ? `Вы действительно хотите удалить шаблон "${name}"?\nВсе файлы, использующие этот шаблон окажутся недоступны\nОтменить это действие невозможно!`
+      : `Вы действительно хотите удалить файл "${name}"?\nОтменить это действие невозможно!`
+    if (confirm(msg)) {
       //console.log(key);
-      this.props.actions.deleteCategory(itemKey);
-      this.props.actions.setCategoryDialogState(null);
+      this.props.actions.deleteFile(itemKey, fpfile);
+      this.props.actions.setFileCreateByTemplateState(null);
     }
   }
 
@@ -56,15 +60,21 @@ class CategoriesDialog extends React.Component {
     const {
       itemKey,
       name,
-      allowedForTeachers
+      fpfile,
+      categoryUid,
+      templateUid,
+      isTemplate
     } = this.props;
-    this.props.actions.saveCategoryFromDialog({
+    this.props.actions.saveUploadedFileFromDialog({
       itemKey,
       name,
-      allowedForTeachers
+      fpfile,
+      categoryUid,
+      templateUid,
+      isTemplate
     });
 
-    this.props.actions.setCategoryDialogState(null);
+    this.props.actions.setFileUploadDialogState(null);
   }
 
   render() {
@@ -72,13 +82,17 @@ class CategoriesDialog extends React.Component {
       itemKey,
       state,
       name,
-      allowedForTeachers
+      fpfile,
+      categoryUid,
+      templateUid,
+      isTemplate,
+      templates
     } = this.props;
     var actions = [
       <FlatButton
         label="Отмена"
         primary={true}
-        onTouchTap={() => this.props.actions.setCategoryDialogState(null)}
+        onTouchTap={() => this.props.actions.setFileUploadDialogState(null)}
       />
     ];
     if (state === 'create') {
@@ -88,7 +102,7 @@ class CategoriesDialog extends React.Component {
           label="Создать"
           primary={true}
           onTouchTap={this.onSave.bind(this)}
-          disabled={name === ''}
+          disabled={name === '' || (templates !== null && templates !== void 0 && templateUid !== '')}
         />
       ]
     }
@@ -99,7 +113,7 @@ class CategoriesDialog extends React.Component {
           label="Сохранить"
           primary={true}
           onTouchTap={this.onSave.bind(this)}
-          disabled={name === ''}
+          disabled={name === '' || (templates !== null && templates !== void 0 && templateUid !== '')}
         />
       ]
     }
@@ -109,33 +123,41 @@ class CategoriesDialog extends React.Component {
               actions={actions}
               modal={false}
               open={state !== 'hide'}
-              onRequestClose={() => this.props.actions.setCategoryDialogState(null)}
+              onRequestClose={() => this.props.actions.setFileUploadDialogState(null)}
             >
         <TextField
           floatingLabelText="Название"
           value={name}
-          onChange={(e) => this.props.actions.setCategoryDialogState({name: e.target.value})} />
+          onChange={(e) => this.props.actions.setFileUploadDialogState({name: e.target.value})} />
         <br />
-          <Checkbox
-            label="Доступна учителям"
-            checked={allowedForTeachers}
-            onCheck={(e, checked) => this.props.actions.setCategoryDialogState({allowedForTeachers: checked})}
-          />
+        <ToggleDisplay if={templates !== null && templates !== void 0}>
+          <DropDownMenu value={templateUid}>
+          <MenuItem value={''} primaryText={'Выберите шаблон'} onTouchTap={() => this.props.actions.setFileUploadDialogState({templateUid: '', fpfile: null})} />
+          {templates.map( (item) =>
+            <MenuItem value={item['.key']} key={item['.key']} primaryText={item.name} onTouchTap={() => this.props.actions.setFileUploadDialogState({templateUid: item['.key'], fpfile: item.fpfile})} />
+          )}
+          </DropDownMenu>
+        </ToggleDisplay>
+        <Checkbox
+          label="Шаблон"
+          checked={isTemplate}
+          onCheck={(e, checked) => this.props.actions.setCategoryDialogState({isTemplate: checked})}
+        />
           <ToggleDisplay if={state === 'edit'}>
             <div>
-            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, itemKey, name )} />
+            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, itemKey, name, isTemplate, fpfile )} />
             </div>
           </ToggleDisplay>
       </Dialog>
   }
 }
-reactMixin(CategoriesDialog.prototype, ReactFireMixin);
+reactMixin(FileDialog.prototype, ReactFireMixin);
 
 function mapStateToProps(state, ownProps) {
   return {
     ...ownProps,
     // redux store
-    ...state.files.categoryDialog,
+    ...state.files.fileUploadDialog,
     user: state.user
   };
 }
@@ -146,4 +168,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CategoriesDialog);
+export default connect(mapStateToProps, mapDispatchToProps)(FileDialog);
