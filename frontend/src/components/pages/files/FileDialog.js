@@ -135,13 +135,6 @@ class FileDialog extends React.Component {
           )}
           </DropDownMenu>
         </ToggleDisplay>
-        <ToggleDisplay if={state === 'create' && !showTemplates}>
-          <Checkbox
-            label="Шаблон"
-            checked={isTemplate}
-            onCheck={(e, checked) => this.props.actions.setFileUploadDialogState({isTemplate: checked})}
-          />
-        </ToggleDisplay>
       </Dialog>
   }
 }

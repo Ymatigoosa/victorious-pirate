@@ -111,8 +111,12 @@ class Categories extends React.Component {
   }
 
   render() {
-    const { search } = this.props;
+    const { search, user } = this.props;
     const { items } = this.state;
+
+    if (!user.isInRole(['admin', 'clerk', 'teacher'])) {
+      return <div style={{padding:'20px'}}>У вас нет прав для просмотра этой страницы</div>
+    }
 
     const breadcrumbs = [
       'Категории'

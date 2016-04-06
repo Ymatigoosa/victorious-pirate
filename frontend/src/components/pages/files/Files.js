@@ -102,7 +102,7 @@ class Files extends React.Component {
     }
     window.location = targetfile.fpfile.url
   }
-  openDialogCreate()
+  openDialogCreate(isTemplate)
   {
     const { filepicker } = this.props;
     filepicker.pick(
@@ -118,7 +118,7 @@ class Files extends React.Component {
           fpfile: Blob,
           categoryUid: this.props.params.categoryUid,
           templateUid: '',
-          isTemplate: false
+          isTemplate: isTemplate
         };
         this.props.actions.saveUploadedFileFromDialog(newfile);
         this.props.actions.setFileUploadDialogState({
@@ -222,7 +222,7 @@ class Files extends React.Component {
           rightIconButton={rightIconMenu}>
             <Highlighter search={search} text={item.name} />
             <div className='ListItemDescription'>
-              {item.isTemplate ? 'Шаблон' : ''}
+              {item.isTemplate ? <Highlighter search={search} text={'Шаблон'} /> : ''}
             </div>
           </ListItem>
       ),
@@ -231,8 +231,12 @@ class Files extends React.Component {
   }
 
   render() {
-    const { search } = this.props;
+    const { search, user } = this.props;
     const { items, category } = this.state;
+
+    if (!user.isInRole(['admin', 'clerk', 'teacher'])) {
+      return <div style={{padding:'20px'}}>У вас нет прав для просмотра этой страницы</div>
+    }
 
     const breadcrumbs = [
       <Link to='/files'>Категории</Link>,
@@ -241,7 +245,7 @@ class Files extends React.Component {
 
     const filtered = search === '' || items === void 0
       ? items
-      : items.filter((value) => value.name.indexOf(search) >= 0 )
+      : items.filter((value) => value.name.indexOf(search) >= 0 || (value.isTemplate && 'Шаблон'.indexOf(search) >= 0) )
 
     return (
       <div>
@@ -254,7 +258,8 @@ class Files extends React.Component {
           />
           <ToggleDisplay if={this.props.user.isInRole(['admin', 'clerk'])}>
             <div>
-              <RaisedButton icon={<AddCircleIcon />} label='Загрузить файл' onMouseUp={this.openDialogCreate.bind(this)} />
+              <RaisedButton icon={<AddCircleIcon />} label='Загрузить файл' onMouseUp={this.openDialogCreate.bind(this, false)} />
+              <RaisedButton icon={<AddCircleIcon />} label='Загрузить шаблон' onMouseUp={this.openDialogCreate.bind(this, true)} />
               <RaisedButton icon={<AddCircleIcon />} label='Создать из шаблона' onMouseUp={this.openDialogCreateByTemplate.bind(this)} />
             </div>
           </ToggleDisplay>
