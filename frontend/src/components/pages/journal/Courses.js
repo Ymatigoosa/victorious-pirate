@@ -205,11 +205,6 @@ class Courses extends React.Component {
           floatingLabelText="Описание"
           value={dialogDescription}
           onChange={this.onDialogDescriptionChange.bind(this)} />
-          <ToggleDisplay if={dialogMode === 'edit'}>
-            <div>
-            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, dialogItem)} />
-            </div>
-          </ToggleDisplay>
       </Dialog>
   }
   render() {

@@ -18,6 +18,7 @@ const initialState = {
     allowedForTeachers: false
   },
   fileUploadDialog: {
+    showTemplates: false,
     itemKey: '',
     state: 'hide',
     name: '',

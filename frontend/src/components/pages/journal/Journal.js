@@ -294,11 +294,6 @@ class Journal extends React.Component {
           floatingLabelText="ФИО"
           value={studentDialogName}
           onChange={this.onStudentDialogNameChange.bind(this)} />
-          <ToggleDisplay if={studentDialogMode === 'edit'}>
-            <div>
-            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onStudentDelete.bind(this, studentDialogItem)} />
-            </div>
-          </ToggleDisplay>
       </Dialog>
   }
   render_dateDialog() {
@@ -351,11 +346,6 @@ class Journal extends React.Component {
           checked={dateDialogIsSum}
           onCheck={this.onDateDialogIsSumChange.bind(this)}
         />
-        <ToggleDisplay if={dateDialogMode === 'edit'}>
-          <div>
-          <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDateDelete.bind(this, dateDialogItem)} />
-          </div>
-        </ToggleDisplay>
       </Dialog>
   }
   render() {

@@ -6,8 +6,10 @@ import Terms from 'components/pages/journal/Terms';
 import Courses from 'components/pages/journal/Courses';
 import Journal from 'components/pages/journal/Journal';
 import StudentGroups from 'components/pages/journal/StudentGroups';
-import FilesPage from 'components/pages/files/FilesPage';
 import Categories from 'components/pages/files/Categories';
+import Categories from 'components/pages/files/Categories';
+import Files from 'components/pages/files/Files';
+import FileView from 'components/pages/files/FileView';
 import LayoutContainer from 'components/LayoutContainer';
 
 //StudentGroups
@@ -29,6 +31,12 @@ const Routes = (
       </Route>
       <Route path="/files" >
         <IndexRoute component={Categories} />
+        <Route path=":categoryUid" >
+          <IndexRoute component={Files} />
+          <Route path=":fileUid" >
+            <IndexRoute component={FileView} />
+          </Route>
+        </Route>
       </Route>
       <Route
         path="/users"

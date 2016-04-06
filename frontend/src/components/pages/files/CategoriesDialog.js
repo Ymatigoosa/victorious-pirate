@@ -44,14 +44,6 @@ class CategoriesDialog extends React.Component {
     //this.unbind('items');
   }
 
-  onDelete(itemKey, name) {
-    if (confirm(`Вы действительно хотите удалить категорию "${name}"?\nОтменить это действие невозможно!`)) {
-      //console.log(key);
-      this.props.actions.deleteCategory(itemKey);
-      this.props.actions.setCategoryDialogState(null);
-    }
-  }
-
   onSave() {
     const {
       itemKey,
@@ -121,11 +113,6 @@ class CategoriesDialog extends React.Component {
             checked={allowedForTeachers}
             onCheck={(e, checked) => this.props.actions.setCategoryDialogState({allowedForTeachers: checked})}
           />
-          <ToggleDisplay if={state === 'edit'}>
-            <div>
-            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, itemKey, name )} />
-            </div>
-          </ToggleDisplay>
       </Dialog>
   }
 }

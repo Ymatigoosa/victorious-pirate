@@ -178,11 +178,6 @@ class Terms extends React.Component {
           floatingLabelText="Название"
           value={dialogName}
           onChange={this.onDialogNameChange.bind(this)} />
-          <ToggleDisplay if={dialogMode === 'edit'}>
-            <div>
-            <RaisedButton label='Удалить' primary={true} onMouseUp={this.onDelete.bind(this, dialogItem)} />
-            </div>
-          </ToggleDisplay>
       </Dialog>
   }
   render() {

@@ -28,6 +28,7 @@ import ToggleDisplay from 'react-toggle-display';
 import shallowequal from 'shallowequal';
 import CategoriesDialog from 'components/pages/files/CategoriesDialog'
 import { Actions } from 'actions/filesActions';
+import { isNullOrWhitespace } from 'utils/Utils';
 
 const iconButtonElement = (
   <IconButton
@@ -77,9 +78,116 @@ class Files extends React.Component {
   }
 
   onListClick(item) {
-    const key = item['.key'];
-    this.props.routeActions.push(`/files/${categoryUid}/${key}`);
+    const targetfile = isNullOrWhitespace(item.templateUid)
+      ? item
+      : this.state.items.filter((value) => value['.key'] === item.templateUid)[0];
+    if (targetfile === null || targetfile === void 0) {
+      alert('Файл не найден!\nВозможно был использован шаблон, который удален');
+      return;
+    }
+    const key = targetfile['.key'];
+    this.props.routeActions.push(`/files/${this.props.params.categoryUid}/${key}`);
   }
+  onDownload(item) {
+    const targetfile = isNullOrWhitespace(item.templateUid)
+      ? item
+      : this.state.items.filter((value) => value['.key'] === item.templateUid)[0];
+    if (targetfile === null || targetfile === void 0) {
+      alert('Файл не найден!\nВозможно был использован шаблон, который удален');
+      return;
+    }
+    window.location = targetfile.fpfile.url
+  }
+  openDialogCreate()
+  {
+    const { filepicker } = this.props;
+    filepicker.pick(
+     {
+        container: 'modal',
+        services: ['COMPUTER']
+      },
+      (Blob) => {
+        console.log(JSON.stringify(Blob));
+        this.props.actions.setFileUploadDialogState({
+          itemKey: null,
+          state: 'create',
+          showTemplates: false,
+          name: '',
+          fpfile: Blob,
+          categoryUid: this.props.params.categoryUid,
+          templateUid: '',
+          isTemplate: false
+        });
+      },
+      (FPError) => {
+        console.error(FPError.toString());
+      }
+    );
+  }
+  openDialogCreateByTemplate()
+  {
+      this.props.actions.setFileUploadDialogState({
+        itemKey: null,
+        state: 'create',
+        showTemplates: true,
+        name: '',
+        fpfile: null,
+        categoryUid: this.props.params.categoryUid,
+        templateUid: '',
+        isTemplate: false
+      });
+  }
+  openDialogEdit(item)
+  {
+      this.props.actions.setFileUploadDialogState({
+        itemKey: null,
+        state: 'edit',
+        showTemplates: false,
+        name: item.name,
+        fpfile: item.fpfile,
+        categoryUid: this.props.params.categoryUid,
+        templateUid: item.templateUid,
+        isTemplate: item.isTemplate
+      });
+  }
+  openDialogEditTemplate(item)
+  {
+      this.props.actions.setFileUploadDialogState({
+        itemKey: null,
+        state: 'edit',
+        showTemplates: true,
+        name: item.name,
+        fpfile: item.fpfile,
+        categoryUid: this.props.params.categoryUid,
+        templateUid: item.templateUid,
+        isTemplate: item.isTemplate
+      });
+  }
+  upload(item)
+  {
+    const { filepicker } = this.props;
+    filepicker.pick(
+     {
+        container: 'modal',
+        services: ['COMPUTER']
+      },
+      (Blob) => {
+        console.log(JSON.stringify(Blob));
+        this.props.actions.saveUploadedFileFromDialog({
+          itemKey: item['.key'],
+          name: item.name,
+          fpfile: Blob,
+          categoryUid: this.props.params.categoryUid,
+          templateUid: item.templateUid,
+          isTemplate: item.isTemplate
+        });
+      },
+      (FPError) => {
+        console.error(FPError.toString());
+      }
+    );
+  }
+
   render_item(item) {
     const key = item['.key'];
 
@@ -90,14 +198,15 @@ class Files extends React.Component {
           iconButtonElement={iconButtonElement}
           anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
           targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-          <MenuItem onTouchTap={() => this.props.actions.setCategoryDialogState({state: 'edit', itemKey: key, name: item.name, allowedForTeachers: item.allowedForTeachers}) }>Редактировать</MenuItem>
-          <MenuItem onTouchTap={() => {window.location = item.fpfile.url; }}>Скачать</MenuItem>
+          <MenuItem onTouchTap={this.onDialogOpenEdit.bind(this, item)}>Редактировать</MenuItem>
+          <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
+          <MenuItem onTouchTap={this.onDownload.bind(this, item)}>Скачать</MenuItem>
+          <MenuItem onTouchTap={this.upload.bind(this, item)}>Загрузить</MenuItem>
           <MenuItem onTouchTap={this.onDelete.bind(this, item)}>Удалить</MenuItem>
         </IconMenu>
     );
     return [
-      (<ToggleDisplay if={this.canUserRead(item)}>
-          <ListItem
+      (<ListItem
           onTouchTap={this.onListClick.bind(this, key)}
           key={key+'_ListItem'}
           rightIconButton={rightIconMenu}>
@@ -106,18 +215,18 @@ class Files extends React.Component {
               {''}
             </div>
           </ListItem>
-        </ToggleDisplay>
       ),
       (<Divider key={key+'_Divider'}/>)
     ];
   }
 
   render() {
-    const { search } = this.props;
+    const { search, category } = this.props;
     const { items } = this.state;
 
     const breadcrumbs = [
-      'Категории'
+      <Link to='/files'>Категории</Link>
+      (category === void 0 || category === null ? '...'  : category.name)
     ];
 
     const filtered = search === '' || items === void 0
@@ -131,22 +240,17 @@ class Files extends React.Component {
           <TextField
             floatingLabelText="Поиск"
             value={search}
-            onChange={(e) => this.props.actions.setCategorySearch(e.target.value)}
+            onChange={(e) => this.props.actions.setFilesSearch(e.target.value)}
           />
+          <ToggleDisplay if={this.props.user.isInRole(['admin', 'clerk'])}>
+            <div>
+              <RaisedButton icon={<AddCircleIcon />} label='Загрузить файл' onMouseUp={this.openDialogCreate.bind(this)} />
+              <RaisedButton icon={<AddCircleIcon />} label='Создать из шаблона' onMouseUp={this.openDialogCreateByTemplate.bind(this)} />
+            </div>
+          </ToggleDisplay>
         </div>
         <List>
-          <Subheader>Выберите категорию</Subheader>
-          <ToggleDisplay if={this.props.user.isInRole(['admin', 'clerk'])}>
-            <ListItem leftIcon={<AddCircleIcon />} onTouchTap={() => this.props.actions.setCategoryDialogState({
-              itemKey: null,
-              state: 'create',
-              name: '',
-              description: '',
-              allowedForTeachers: false
-            })}
-            >Новая категория</ListItem>
-            <Divider />
-          </ToggleDisplay>
+          <Subheader>Выберите файл</Subheader>
           { filtered.map((i) => this.render_item(i)) }
         </List>
         <CategoriesDialog />
@@ -160,8 +264,9 @@ function mapStateToProps(state, ownProps) {
   return {
     ...ownProps,
     // redux store
-    search: state.files.category_search,
+    search: state.files.files_search,
     firebaseService: state.firebaseService,
+    filepicker: state.filepicker,
     user: state.user
   };
 }
