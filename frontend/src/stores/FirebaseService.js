@@ -65,12 +65,33 @@ class FirebaseService {
   constructor(url) {
     this.ref = new Firebase(url);
   }
+  removeUser({email, password}, cb) {
+    this.ref.removeUser({
+      email,
+      password
+    }, function(err) {
+      if (err) {
+        var message = genErrorMsg(err);
+        console.error(message);
+        cb && cb(message);
+      } else {
+        cb && cb(false);
+      }
+    });
+  }
+  editUser({itemKey, fullname, about, roles}, cb) {
+    this.ref.child('users').child(itemKey).once('value', (snapshot) => {
+      const val = snapshot.val();
+      this.ref.child('users').child(itemKey).set({...val, key: itemKey, fullname, about, roles});
+      cb && cb();
+    });
+  }
   createUser({email, password, fullname, about, roles}, cb) {
     this.ref.createUser({email: email, password: password}, function(err, authData) {
       if (err) {
         var message = genErrorMsg(err);
         console.error(message);
-        cb(message);
+        cb && cb(message);
       } else {
           const newuser = {
             email: email,
