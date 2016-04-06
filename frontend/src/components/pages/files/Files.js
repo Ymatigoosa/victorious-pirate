@@ -68,14 +68,13 @@ class Files extends React.Component {
     this.props.actions.setFilesSearch('');
   }
 
-  onDelete(itemKey, name, isTemplate, fpfile) {
-    const msg = isTemplate
-      ? `Вы действительно хотите удалить шаблон "${name}"?\nВсе файлы, использующие этот шаблон окажутся недоступны\nОтменить это действие невозможно!`
-      : `Вы действительно хотите удалить файл "${name}"?\nОтменить это действие невозможно!`
+  onDelete(item) {
+    const msg = item.isTemplate
+      ? `Вы действительно хотите удалить шаблон "${item.name}"?\nВсе файлы, использующие этот шаблон окажутся недоступны\nОтменить это действие невозможно!`
+      : `Вы действительно хотите удалить файл "${item.name}"?\nОтменить это действие невозможно!`
     if (confirm(msg)) {
       //console.log(key);
-      this.props.actions.deleteFile(itemKey, fpfile);
-      this.props.actions.setFileCreateByTemplateState(null);
+      this.props.actions.deleteFile(item['.key'], item.fpfile);
     }
   }
 
@@ -87,8 +86,11 @@ class Files extends React.Component {
       alert('Файл не найден!\nВозможно был использован шаблон, который удален');
       return;
     }
-    const key = targetfile['.key'];
-    this.props.routeActions.push(`/files/${this.props.params.categoryUid}/${key}`);
+    //const key = targetfile['.key'];
+    const url = targetfile.fpfile.url.replace('/file/', '/preview/');
+    var win = window.open(url, '_blank');
+    win.focus();
+    //this.props.routeActions.push(`/files/${this.props.params.categoryUid}/${key}`);
   }
   onDownload(item) {
     const targetfile = isNullOrWhitespace(item.templateUid)
@@ -109,16 +111,19 @@ class Files extends React.Component {
         services: ['COMPUTER']
       },
       (Blob) => {
-        console.log(JSON.stringify(Blob));
-        this.props.actions.setFileUploadDialogState({
-          itemKey: null,
-          state: 'create',
-          showTemplates: false,
-          name: '',
+        const itemkey = this.props.firebaseService.ref.child('documents').push().key();
+        const newfile = {
+          itemKey: itemkey,
+          name: Blob.filename,
           fpfile: Blob,
           categoryUid: this.props.params.categoryUid,
           templateUid: '',
           isTemplate: false
+        };
+        this.props.actions.saveUploadedFileFromDialog(newfile);
+        this.props.actions.setFileUploadDialogState({
+          state: 'create',
+          ...newfile
         });
       },
       (FPError) => {
@@ -142,7 +147,7 @@ class Files extends React.Component {
   openDialogEdit(item)
   {
       this.props.actions.setFileUploadDialogState({
-        itemKey: null,
+        itemKey: item['.key'],
         state: 'edit',
         showTemplates: false,
         name: item.name,
@@ -155,7 +160,7 @@ class Files extends React.Component {
   openDialogEditTemplate(item)
   {
       this.props.actions.setFileUploadDialogState({
-        itemKey: null,
+        itemKey: item['.key'],
         state: 'edit',
         showTemplates: true,
         name: item.name,
@@ -174,13 +179,13 @@ class Files extends React.Component {
         services: ['COMPUTER']
       },
       (Blob) => {
-        console.log(JSON.stringify(Blob));
+        //console.log(JSON.stringify(Blob));
         this.props.actions.saveUploadedFileFromDialog({
           itemKey: item['.key'],
           name: item.name,
           fpfile: Blob,
           categoryUid: this.props.params.categoryUid,
-          templateUid: item.templateUid,
+          templateUid: '',
           isTemplate: item.isTemplate
         });
       },
@@ -201,7 +206,10 @@ class Files extends React.Component {
           anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
           targetOrigin={{horizontal: 'right', vertical: 'top'}}>
           <MenuItem onTouchTap={this.openDialogEdit.bind(this, item)}>Редактировать</MenuItem>
-          <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
+          {!item.isTemplate
+            ? <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
+            : null
+          }
           <MenuItem onTouchTap={this.onDownload.bind(this, item)}>Скачать</MenuItem>
           <MenuItem onTouchTap={this.upload.bind(this, item)}>Загрузить</MenuItem>
           <MenuItem onTouchTap={this.onDelete.bind(this, item)}>Удалить</MenuItem>

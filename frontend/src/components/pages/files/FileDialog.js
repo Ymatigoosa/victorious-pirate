@@ -68,6 +68,10 @@ class FileDialog extends React.Component {
     this.props.actions.setFileUploadDialogState(null);
   }
 
+  onTemplateChange(event, index, value) {
+    this.props.actions.setFileUploadDialogState({templateUid: value, fpfile: null})
+  }
+
   render() {
     const {
       itemKey,
@@ -95,7 +99,7 @@ class FileDialog extends React.Component {
           label="Создать"
           primary={true}
           onTouchTap={this.onSave.bind(this)}
-          disabled={name === '' || (showTemplates && templateUid !== '')}
+          disabled={name === '' || (showTemplates && templateUid === '')}
         />
       ]
     }
@@ -106,7 +110,7 @@ class FileDialog extends React.Component {
           label="Сохранить"
           primary={true}
           onTouchTap={this.onSave.bind(this)}
-          disabled={name === '' || (showTemplates && templateUid !== '')}
+          disabled={name === '' || (showTemplates && templateUid === '')}
         />
       ]
     }
@@ -124,14 +128,14 @@ class FileDialog extends React.Component {
           onChange={(e) => this.props.actions.setFileUploadDialogState({name: e.target.value})} />
         <br />
         <ToggleDisplay if={showTemplates}>
-          <DropDownMenu value={templateUid}>
-          <MenuItem value={''} primaryText={'Выберите шаблон'} onTouchTap={() => this.props.actions.setFileUploadDialogState({templateUid: '', fpfile: null})} />
+          <DropDownMenu value={templateUid} onChange={this.onTemplateChange.bind(this)}>
+          <MenuItem value={''} primaryText={'Выберите шаблон'} />
           {templates.map( (item) =>
-            <MenuItem value={item['.key']} key={item['.key']} primaryText={item.name} onTouchTap={() => this.props.actions.setFileUploadDialogState({templateUid: item['.key'], fpfile: null})} />
+            <MenuItem value={item['.key']} key={item['.key']} primaryText={item.name} />
           )}
           </DropDownMenu>
         </ToggleDisplay>
-        <ToggleDisplay if={!showTemplates}>
+        <ToggleDisplay if={state === 'create' && !showTemplates}>
           <Checkbox
             label="Шаблон"
             checked={isTemplate}

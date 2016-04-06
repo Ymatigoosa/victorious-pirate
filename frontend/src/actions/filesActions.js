@@ -51,7 +51,7 @@ export const Actions = {
 
   },
 
-  saveUploadedFileFromDialog: ({ itemKey, name, fpfile, categoryUid, isTemplate, templateUid }) => (dispatch, getState) => {
+  saveUploadedFileFromDialog: ({ itemKey, name, fpfile, categoryUid, isTemplate, templateUid }, cb) => (dispatch, getState) => {
     const {
       firebaseService,
       filepicker
@@ -64,16 +64,21 @@ export const Actions = {
       templateUid,
       isTemplate
     };
+    console.log(itemKey);
     if (!isNullOrWhitespace(itemKey)) {
       firebaseService.ref.child('documents').child(itemKey).once('value', (snapshot) => {
-        const { oldfpfile } = snapshot.val();
-        if (oldfpfile !== null && oldfpfile !== void 0) {
-          filepicker.remove(oldfpfile);
+        const val = snapshot.val();
+        if (val != null) {
+          if (val.fpfile !== null && val.fpfile !== void 0) {
+            filepicker.remove(val.fpfile);
+          }
         }
         firebaseService.ref.child('documents').child(itemKey).set(newdata);
+        cb && cb(itemKey);
       });
     } else {
-      firebaseService.ref.child('documents').push(newdata);
+      const newref = firebaseService.ref.child('documents').push(newdata);
+      cb && cb(newref.key());
     }
 
     //dispatch(Actions.setFileUploadDialogState(null));
