@@ -7,7 +7,6 @@ import Courses from 'components/pages/journal/Courses';
 import Journal from 'components/pages/journal/Journal';
 import StudentGroups from 'components/pages/journal/StudentGroups';
 import Categories from 'components/pages/files/Categories';
-import Categories from 'components/pages/files/Categories';
 import Files from 'components/pages/files/Files';
 import FileView from 'components/pages/files/FileView';
 import LayoutContainer from 'components/LayoutContainer';

@@ -26,7 +26,7 @@ import Breadcrumbs from 'components/Breadcrumbs';
 import { Link } from 'react-router';
 import ToggleDisplay from 'react-toggle-display';
 import shallowequal from 'shallowequal';
-import CategoriesDialog from 'components/pages/files/CategoriesDialog'
+import FileDialog from 'components/pages/files/FileDialog'
 import { Actions } from 'actions/filesActions';
 import { isNullOrWhitespace } from 'utils/Utils';
 
@@ -44,6 +44,8 @@ class Files extends React.Component {
 
     this.documentsRef = this.props.firebaseService.ref
       .child('documents');
+
+    this.state = {};
   }
   componentWillMount() {
     this.bindAsArray(
@@ -198,7 +200,7 @@ class Files extends React.Component {
           iconButtonElement={iconButtonElement}
           anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
           targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-          <MenuItem onTouchTap={this.onDialogOpenEdit.bind(this, item)}>Редактировать</MenuItem>
+          <MenuItem onTouchTap={this.openDialogEdit.bind(this, item)}>Редактировать</MenuItem>
           <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
           <MenuItem onTouchTap={this.onDownload.bind(this, item)}>Скачать</MenuItem>
           <MenuItem onTouchTap={this.upload.bind(this, item)}>Загрузить</MenuItem>
@@ -207,12 +209,12 @@ class Files extends React.Component {
     );
     return [
       (<ListItem
-          onTouchTap={this.onListClick.bind(this, key)}
+          onTouchTap={this.onListClick.bind(this, item)}
           key={key+'_ListItem'}
           rightIconButton={rightIconMenu}>
             <Highlighter search={search} text={item.name} />
             <div className='ListItemDescription'>
-              {''}
+              {item.isTemplate ? 'Шаблон' : ''}
             </div>
           </ListItem>
       ),
@@ -221,11 +223,11 @@ class Files extends React.Component {
   }
 
   render() {
-    const { search, category } = this.props;
-    const { items } = this.state;
+    const { search } = this.props;
+    const { items, category } = this.state;
 
     const breadcrumbs = [
-      <Link to='/files'>Категории</Link>
+      <Link to='/files'>Категории</Link>,
       (category === void 0 || category === null ? '...'  : category.name)
     ];
 
@@ -253,7 +255,7 @@ class Files extends React.Component {
           <Subheader>Выберите файл</Subheader>
           { filtered.map((i) => this.render_item(i)) }
         </List>
-        <CategoriesDialog />
+        <FileDialog templates={items === void 0 || items === null ? [] : items.filter((value) => value.isTemplate)} />
       </div>
     );
   }

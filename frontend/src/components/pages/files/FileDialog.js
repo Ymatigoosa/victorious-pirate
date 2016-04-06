@@ -33,6 +33,8 @@ import MenuItem from 'material-ui/lib/menus/menu-item';
 class FileDialog extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {};
   }
   componentWillMount() {
 
@@ -78,6 +80,7 @@ class FileDialog extends React.Component {
       showTemplates,
       templates
     } = this.props;
+    //console.log(this.props);
     var actions = [
       <FlatButton
         label="Отмена"
@@ -120,7 +123,7 @@ class FileDialog extends React.Component {
           value={name}
           onChange={(e) => this.props.actions.setFileUploadDialogState({name: e.target.value})} />
         <br />
-        <ToggleDisplay if={templates !== null && templates !== void 0}>
+        <ToggleDisplay if={showTemplates}>
           <DropDownMenu value={templateUid}>
           <MenuItem value={''} primaryText={'Выберите шаблон'} onTouchTap={() => this.props.actions.setFileUploadDialogState({templateUid: '', fpfile: null})} />
           {templates.map( (item) =>
@@ -128,11 +131,11 @@ class FileDialog extends React.Component {
           )}
           </DropDownMenu>
         </ToggleDisplay>
-        <ToggleDisplay if={showTemplates}>
+        <ToggleDisplay if={!showTemplates}>
           <Checkbox
             label="Шаблон"
             checked={isTemplate}
-            onCheck={(e, checked) => this.props.actions.setCategoryDialogState({isTemplate: checked})}
+            onCheck={(e, checked) => this.props.actions.setFileUploadDialogState({isTemplate: checked})}
           />
         </ToggleDisplay>
       </Dialog>

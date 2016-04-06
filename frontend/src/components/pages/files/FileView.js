@@ -28,11 +28,31 @@ import ToggleDisplay from 'react-toggle-display';
 import shallowequal from 'shallowequal';
 import CategoriesDialog from 'components/pages/files/CategoriesDialog'
 import { Actions } from 'actions/filesActions';
+import jQuery from 'jquery';
+
+class FilePickerView extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {};
+  }
+
+  componentDidMount() {
+    const { filepicker } = this.props;
+    const filepickerElement = this.refs.filepicker;
+    filepicker.constructWidget(filepickerElement);
+  }
+  render() {
+    const { file } = this.props;
+    return <div ref='filepicker' type="filepicker-preview" data-fp-url={`${file.fpfile.url}`} ></div>
+  }
+}
 
 class FileView extends React.Component {
   constructor(props) {
     super(props);
 
+    this.state = {};
   }
   componentWillMount() {
     this.bindAsObject(
@@ -47,8 +67,9 @@ class FileView extends React.Component {
       (error) => console.error(error)
     );
   }
-  shouldComponentUpdate(nextProps, nextState) {
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return true;
   }
   componentWillUnmount() {
   }
@@ -56,7 +77,6 @@ class FileView extends React.Component {
 
   render() {
     const { file, category } = this.state;
-
     const breadcrumbs = [
       <Link to='/files'>Категории</Link>,
       <Link to={`/files/${this.props.params.categoryUid}`} >{category === void 0 || category === null ? '...'  : category.name}</Link>,
@@ -66,9 +86,10 @@ class FileView extends React.Component {
     return (
       <div>
         <Breadcrumbs items={breadcrumbs} />
-        <ToggleDisplay if={file != null && file !== void 0} >
-          <div type="filepicker-preview" data-fp-url={`${file.fpfile.url}`} > </div>
-        </ToggleDisplay>
+        {file !== void 0 && file !== null
+          ? <FilePickerView filepicker={filepicker} file={file}/>
+          : <div></div>
+        }
       </div>
     );
   }
