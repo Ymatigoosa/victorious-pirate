@@ -14,7 +14,7 @@ import LayoutContainer from 'components/LayoutContainer';
 
 const Routes = (
     <Route path="/" component={LayoutContainer}>
-      <IndexRedirect to="/files" />
+      <IndexRedirect to="/journal" />
       <Route path="/journal">
         <IndexRoute component={Terms} />
         <Route path=":academicTermUid">
