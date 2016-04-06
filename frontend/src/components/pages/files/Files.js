@@ -111,6 +111,7 @@ class Files extends React.Component {
         services: ['COMPUTER']
       },
       (Blob) => {
+        console.log(JSON.stringify(Blob));
         const itemkey = this.props.firebaseService.ref.child('documents').push().key();
         const newfile = {
           itemKey: itemkey,
@@ -179,7 +180,7 @@ class Files extends React.Component {
         services: ['COMPUTER']
       },
       (Blob) => {
-        //console.log(JSON.stringify(Blob));
+        console.log(JSON.stringify(Blob));
         this.props.actions.saveUploadedFileFromDialog({
           itemKey: item['.key'],
           name: item.name,

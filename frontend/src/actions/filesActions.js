@@ -64,7 +64,7 @@ export const Actions = {
       templateUid,
       isTemplate
     };
-    console.log(itemKey);
+    //console.log(itemKey);
     if (!isNullOrWhitespace(itemKey)) {
       firebaseService.ref.child('documents').child(itemKey).once('value', (snapshot) => {
         const val = snapshot.val();
