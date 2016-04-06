@@ -147,48 +147,50 @@ class Layout extends React.Component {
     };
 
     return (
-      <div className='Layout'>
-        <AppBar
-          className='Layout-header'
-          style={{position: 'fixed'}}
-          title={title}
-          onLeftIconButtonTouchTap={toggleLeftNav} />
-        <LeftNav
-          width={200}
-          open={isNavOpen}
-          onRequestChange={toggleLeftNav}
-          docked={false} >
-          <List>
-            <div style={{textAlign: 'center', marginTop: '-8px', backgroundColor: Colors.grey100 }}>{profileBtn}</div>
-            <Divider />
-            <Subheader>Меню</Subheader>
-            <ListItemLink to='/journal' {...listitemlinkprops} primaryText="Журнал" />
-            {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...listitemlinkprops} primaryText="Файлы" /> : null}
-            {this.isInRole('admin') ? (
-              <div>
-                <Divider />
-                  <Subheader>Настройки</Subheader>
-                  <ListItemLink to='/users' {...listitemlinkprops} primaryText="Пользователи" />
-              </div>
-            ) : null}
-          </List>
-        </LeftNav>
-        <div className='Layout-body' >
-            {children}
+      <div>
+      <AppBar
+        className='Layout-header'
+        style={{position: 'fixed'}}
+        title={title}
+        onLeftIconButtonTouchTap={toggleLeftNav} />
+        <div className='Layout'>
+          <LeftNav
+            width={200}
+            open={isNavOpen}
+            onRequestChange={toggleLeftNav}
+            docked={false} >
+            <List>
+              <div style={{textAlign: 'center', marginTop: '-8px', backgroundColor: Colors.grey100 }}>{profileBtn}</div>
+              <Divider />
+              <Subheader>Меню</Subheader>
+              <ListItemLink to='/journal' {...listitemlinkprops} primaryText="Журнал" />
+              {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...listitemlinkprops} primaryText="Файлы" /> : null}
+              {this.isInRole('admin') ? (
+                <div>
+                  <Divider />
+                    <Subheader>Настройки</Subheader>
+                    <ListItemLink to='/users' {...listitemlinkprops} primaryText="Пользователи" />
+                </div>
+              ) : null}
+            </List>
+          </LeftNav>
+          <div className='Layout-body' >
+              {children}
+          </div>
+          {/*<div className='Layout-footer'>
+            {'футер'}
+          </div>*/}
+          {userDialog}
+          {
+            (() => {
+              if (config.appEnv === 'dev') {
+                const DevTools = require('components/DevTools').default;
+                //console.log(DevTools);
+                return <DevTools />;
+              }
+            })()
+          }
         </div>
-        {/*<div className='Layout-footer'>
-          {'футер'}
-        </div>*/}
-        {userDialog}
-        {
-          (() => {
-            if (config.appEnv === 'dev') {
-              const DevTools = require('components/DevTools').default;
-              //console.log(DevTools);
-              return <DevTools />;
-            }
-          })()
-        }
       </div>
     );
   }
