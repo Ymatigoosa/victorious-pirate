@@ -69,7 +69,10 @@ export const Actions = {
       firebaseService.ref.child('documents').child(itemKey).once('value', (snapshot) => {
         const val = snapshot.val();
         if (val != null) {
-          if (val.fpfile !== null && val.fpfile !== void 0) {
+          const needtodelete = val.fpfile !== null
+            && val.fpfile !== void 0
+            && (fpfile === null || fpfile === void 0 || fpfile.url !== val.fpfile.url);
+          if (needtodelete) {
             filepicker.remove(val.fpfile);
           }
         }
