@@ -105,11 +105,13 @@ class Files extends React.Component {
   openDialogCreate(isTemplate)
   {
     const { filepicker } = this.props;
-    filepicker.pick(
+    filepicker.pickAndStore(
      {
+        mimetypes: ['*/*'],
         container: 'modal',
         services: ['COMPUTER']
       },
+      {},
       (Blob) => {
         console.log(JSON.stringify(Blob));
         const itemkey = this.props.firebaseService.ref.child('documents').push().key();
@@ -174,11 +176,13 @@ class Files extends React.Component {
   upload(item)
   {
     const { filepicker } = this.props;
-    filepicker.pick(
+    filepicker.pickAndStore(
      {
+        mimetypes: ['*/*'],
         container: 'modal',
         services: ['COMPUTER']
       },
+      {},
       (Blob) => {
         console.log(JSON.stringify(Blob));
         this.props.actions.saveUploadedFileFromDialog({

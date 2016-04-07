@@ -1,6 +1,6 @@
 import filepicker from 'filepicker-js';
 
-filepicker.setKey('AOFL2utyjSKqOE7iVgA1Iz');
+filepicker.setKey('AmZcBbCnASKaIcifXnU9Oz');
 const initialState = filepicker;
 
 function reducer(state = initialState, action) {
