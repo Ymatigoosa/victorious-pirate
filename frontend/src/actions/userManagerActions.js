@@ -1,4 +1,4 @@
-import keyMirror from 'keyMirror';
+import keyMirror from 'keymirror';
 import { isNullOrWhitespace } from 'utils/Utils';
 
 export const ActionTypes = keyMirror({
