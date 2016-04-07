@@ -38,6 +38,17 @@ const iconButtonElement = (
   </IconButton>
 );
 
+const FILEPICKER_OPTIONS = {
+  mimetype: '*/*',
+  container: 'modal',
+  service: 'COMPUTER',
+  debug: false,
+  hide: false,
+  multiple: false,
+  maxFiles: 1,
+  language: 'ru'
+}
+
 class Files extends React.Component {
   constructor(props) {
     super(props);
@@ -105,15 +116,10 @@ class Files extends React.Component {
   openDialogCreate(isTemplate)
   {
     const { filepicker } = this.props;
-    filepicker.pickAndStore(
-     {
-        mimetypes: ['*/*'],
-        container: 'modal',
-        services: ['COMPUTER']
-      },
-      {},
-      (Blob) => {
-        console.log(JSON.stringify(Blob));
+    filepicker.pickAndStore(FILEPICKER_OPTIONS, {},
+      (Blobs) => {
+        console.log(JSON.stringify(Blobs));
+        const Blob = Blobs[0];
         const itemkey = this.props.firebaseService.ref.child('documents').push().key();
         const newfile = {
           itemKey: itemkey,
@@ -176,15 +182,10 @@ class Files extends React.Component {
   upload(item)
   {
     const { filepicker } = this.props;
-    filepicker.pickAndStore(
-     {
-        mimetypes: ['*/*'],
-        container: 'modal',
-        services: ['COMPUTER']
-      },
-      {},
-      (Blob) => {
-        console.log(JSON.stringify(Blob));
+    filepicker.pickAndStore(FILEPICKER_OPTIONS, {},
+      (Blobs) => {
+        console.log(JSON.stringify(Blobs));
+        const Blob = Blobs[0];
         this.props.actions.saveUploadedFileFromDialog({
           itemKey: item['.key'],
           name: item.name,
