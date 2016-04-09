@@ -11,6 +11,7 @@ import * as Colors from 'material-ui/lib/styles/colors';
 import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
 import AddCircleIcon from 'material-ui/lib/svg-icons/content/add-circle';
+import FileDownload from 'material-ui/lib/svg-icons/file/file-download';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
 import MenuItem from 'material-ui/lib/menus/menu-item';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
@@ -363,12 +364,13 @@ class Journal extends React.Component {
         <Breadcrumbs items={breadcrumbs} />
         <div style={{padding:'20px'}}>
           <br />
-          <ToggleDisplay if={this.canUserWrite()} >
           <div>
+          <ToggleDisplay if={this.canUserWrite()} >
             <RaisedButton icon={<AddCircleIcon />} label='Добавить студента' onMouseUp={this.onStudentDialogOpenCreate.bind(this)} />
             <RaisedButton icon={<AddCircleIcon />} label='Добавить занятие' onMouseUp={this.onDateDialogOpenCreate.bind(this)} />
+            </ToggleDisplay>
+            <RaisedButton icon={<FileDownload />} label='Скачать' linkButton={true} href={`/api/journal-xml/${this.props.params.academicTermUid}/${this.props.params.courseUid}/${this.props.params.studentGroupUid}`} />
           </div>
-          </ToggleDisplay>
         </div>
         {<JournalTable
           firebaseRef={this.props.firebaseService.ref}
