@@ -9,7 +9,9 @@ scalaVersion := "2.11.7"
 libraryDependencies ++= Seq(
   javaJdbc,
   cache,
-  javaWs
+  javaWs,
+  "org.apache.poi" % "poi" % "3.9",
+  "com.firebase" % "firebase-client-jvm" % "2.5.2"
 )
 
 unmanagedResourceDirectories in Assets += baseDirectory.value / "frontend" / "dist"
