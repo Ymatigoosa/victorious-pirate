@@ -60,10 +60,13 @@ public class JournalXmlCreatorActor extends UntypedActor {
 
         } else if (msg instanceof JournalXmlCreatorActorProtocol.DatesRecieved ) {
             this.dates = ((JournalXmlCreatorActorProtocol.DatesRecieved)msg).dates;
+            _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.MarksRecieved ) {
             this.marks = ((JournalXmlCreatorActorProtocol.MarksRecieved)msg).marks;
+            _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.StudentsRecieved ) {
             this.students = ((JournalXmlCreatorActorProtocol.StudentsRecieved) msg).students;
+            _tryStartXlsCreating();
         } else if (msg.equals("timeout")) {
             getContext().stop(self());
         } else {
@@ -103,8 +106,8 @@ public class JournalXmlCreatorActor extends UntypedActor {
                     @Override
                     public void onDataChange(DataSnapshot querySnapshot) {
                         List<JournalDate> acc = new ArrayList<JournalDate>();
-                        for (DataSnapshot dateSnapshot: querySnapshot.getChildren()) {
-                            JournalDate item = dateSnapshot.getValue(JournalDate.class);
+                        for (DataSnapshot dataSnapshot: querySnapshot.getChildren()) {
+                            JournalDate item = dataSnapshot.getValue(JournalDate.class);
                             acc.add(item);
                         }
                         self_c.tell(new JournalXmlCreatorActorProtocol.DatesRecieved(acc), self_c);
@@ -123,8 +126,8 @@ public class JournalXmlCreatorActor extends UntypedActor {
                     @Override
                     public void onDataChange(DataSnapshot querySnapshot) {
                         List<Student> acc = new ArrayList<Student>();
-                        for (DataSnapshot dateSnapshot: querySnapshot.getChildren()) {
-                            Student item = dateSnapshot.getValue(Student.class);
+                        for (DataSnapshot dataSnapshot: querySnapshot.getChildren()) {
+                            Student item = dataSnapshot.getValue(Student.class);
                             acc.add(item);
                         }
                         self_c.tell(new JournalXmlCreatorActorProtocol.StudentsRecieved(acc), self_c);
@@ -143,8 +146,8 @@ public class JournalXmlCreatorActor extends UntypedActor {
                     @Override
                     public void onDataChange(DataSnapshot querySnapshot) {
                         List<StudentMark> acc = new ArrayList<StudentMark>();
-                        for (DataSnapshot dateSnapshot: querySnapshot.getChildren()) {
-                            StudentMark item = dateSnapshot.getValue(StudentMark.class);
+                        for (DataSnapshot dataSnapshot: querySnapshot.getChildren()) {
+                            StudentMark item = dataSnapshot.getValue(StudentMark.class);
                             acc.add(item);
                         }
                         self_c.tell(new JournalXmlCreatorActorProtocol.MarksRecieved(acc), self_c);

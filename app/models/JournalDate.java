@@ -1,11 +1,16 @@
 package models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class JournalDate {
     private String academicTermUid;
     private String courseUid;
     private Boolean isSum;
     private String studentGroupUid;
-    private Integer timestamp;
+    private Long timestamp;
+
+    @JsonProperty("studentGroupUid-courseUid")
+    private String studentGroupUid_CourseUid;
 
     public JournalDate() {
 
@@ -19,7 +24,7 @@ public class JournalDate {
         return courseUid;
     }
 
-    public Boolean getSum() {
+    public Boolean getIsSum() {
         return isSum;
     }
 
@@ -27,7 +32,12 @@ public class JournalDate {
         return studentGroupUid;
     }
 
-    public Integer getTimestamp() {
+    public Long getTimestamp() {
         return timestamp;
+    }
+
+    @JsonProperty("studentGroupUid-courseUid")
+    public String getStudentGroupUidCourseUid() {
+        return studentGroupUid_CourseUid;
     }
 }
