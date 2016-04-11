@@ -1,8 +1,10 @@
 package controllers;
 
-import com.firebase.client.Firebase;
+import actors.JournalXmlCreatorActor;
+import actors.JournalXmlCreatorActorProtocol;
 import akka.actor.*;
 import play.mvc.*;
+import play.Configuration;
 import scala.compat.java8.FutureConverters;
 import javax.inject.*;
 import java.util.concurrent.CompletionStage;
@@ -15,15 +17,12 @@ import static akka.pattern.Patterns.ask;
  */
 public class JournalApiController extends Controller {
 
-    final ActorRef helloActor;
+    private final ActorSystem system;
+    private final Configuration configuration;
 
-    @Inject public JournalApiController(ActorSystem system) {
-        helloActor = system.actorOf(HelloActor.props);
-    }
-
-    public CompletionStage<Result> sayHello(String name) {
-        return FutureConverters.toJava(ask(helloActor, new SayHello(name), 1000))
-                .thenApply(response -> ok((String) response));
+    @Inject public JournalApiController(ActorSystem system, Configuration configuration) {
+        this.system = system;
+        this.configuration = configuration;
     }
 
     /**
@@ -33,9 +32,16 @@ public class JournalApiController extends Controller {
      * <code>GET</code> request with a path of <code>/</code>.
      */
     public CompletionStage<Result> generateXls(String academicTermUid, String courseUid, String studentGroupUid) {
-        Firebase rootRef = new Firebase("https://victorious-pirate.firebaseio.com");
-
-        throw new UnsupportedOperationException();
+        ActorRef actor = system.actorOf(JournalXmlCreatorActor.props());
+        String firebaseUrl = this.configuration.getString("firebaseUrl");
+        JournalXmlCreatorActorProtocol.CreateJournalXml msg = new JournalXmlCreatorActorProtocol.CreateJournalXml(
+                academicTermUid,
+                courseUid,
+                studentGroupUid,
+                firebaseUrl
+        );
+        return FutureConverters.toJava(ask(actor, msg, 10000))
+                .thenApply(response -> ok("azaza"));
     }
 
 }

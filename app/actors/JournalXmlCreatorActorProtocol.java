@@ -9,8 +9,16 @@ import java.util.List;
 public class JournalXmlCreatorActorProtocol {
     public static class CreateJournalXml {
 
-        public CreateJournalXml() {
+        public final String academicTermUid;
+        public final String courseUid;
+        public final String studentGroupUid;
+        public final String firebaseUrl;
 
+        public CreateJournalXml(String academicTermUid, String courseUid, String studentGroupUid, String firebaseUrl) {
+            this.academicTermUid = academicTermUid;
+            this.courseUid = courseUid;
+            this.studentGroupUid = studentGroupUid;
+            this.firebaseUrl = firebaseUrl;
         }
     }
 
