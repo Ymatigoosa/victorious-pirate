@@ -191,7 +191,7 @@ class JournalTable extends React.Component {
                 stripedRows={false}
               >
                 {this.render_header(ordereddates)}
-                {students.map( (student) => this.render_row(ordereddates, student, marks))}
+                {students.sort((a, b) => a.name.localeCompare(b.name)).map( (student) => this.render_row(ordereddates, student, marks))}
               </TableBody>
             </Table>
   }
