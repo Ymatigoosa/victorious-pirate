@@ -3,10 +3,13 @@ package controllers;
 import actors.JournalXmlCreatorActor;
 import actors.JournalXmlCreatorActorProtocol;
 import akka.actor.*;
+import play.Logger;
 import play.mvc.*;
 import play.Configuration;
 import scala.compat.java8.FutureConverters;
 import javax.inject.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.concurrent.CompletionStage;
 
 import static akka.pattern.Patterns.ask;
@@ -38,10 +41,18 @@ public class JournalApiController extends Controller {
                 academicTermUid,
                 courseUid,
                 studentGroupUid,
-                firebaseUrl
-        );
+                firebaseUrl);
         return FutureConverters.toJava(ask(actor, msg, 10000))
                 .thenApply(response -> this.sendXlsxResponse(response));
+    }
+
+    private String getFilename(String courseName, String groupName) {
+        String raw = courseName + " "+ groupName + ".xlsx";
+        try {
+            return URLEncoder.encode(raw, "UTF-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            return "journal.xlsx";
+        }
     }
 
     private Result sendXlsxResponse(Object response) {
@@ -49,7 +60,7 @@ public class JournalApiController extends Controller {
             JournalXmlCreatorActorProtocol.JournalXmlCreated msg = (JournalXmlCreatorActorProtocol.JournalXmlCreated)response;
             return ok(msg.file)
                     .as("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    .withHeader("Content-Disposition", "attachment; filename=journal.xlsx");
+                    .withHeader("Content-Disposition", "attachment; filename=\""+getFilename(msg.courseName, msg.groupName) +"\"");
         } else if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlError ) {
             JournalXmlCreatorActorProtocol.JournalXmlError msg = (JournalXmlCreatorActorProtocol.JournalXmlError)response;
             return this.internalServerError("createXls returned an error");

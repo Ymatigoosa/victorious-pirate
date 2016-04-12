@@ -46,6 +46,8 @@ public class JournalXmlCreatorActor extends UntypedActor {
     private List<JournalDate> dates = null;
     private List<Student> students = null;
     private List<StudentMark> marks = null;
+    private StudentGroup group = null;
+    private Course course = null;
     private ActorRef initiator = null;
     private Cancellable timeoutMessage;
 
@@ -75,6 +77,12 @@ public class JournalXmlCreatorActor extends UntypedActor {
         } else if (msg instanceof JournalXmlCreatorActorProtocol.StudentsRecieved ) {
             this.students = ((JournalXmlCreatorActorProtocol.StudentsRecieved) msg).students;
             _tryStartXlsCreating();
+        } else if (msg instanceof JournalXmlCreatorActorProtocol.StudentGroupRecieved ) {
+            this.group = ((JournalXmlCreatorActorProtocol.StudentGroupRecieved) msg).group;
+            _tryStartXlsCreating();
+        } else if (msg instanceof JournalXmlCreatorActorProtocol.CourseRecieved ) {
+            this.course = ((JournalXmlCreatorActorProtocol.CourseRecieved) msg).course;
+            _tryStartXlsCreating();
         } else if (msg.equals("timeout")) {
             getContext().stop(self());
         } else {
@@ -83,7 +91,12 @@ public class JournalXmlCreatorActor extends UntypedActor {
     }
 
     private void _tryStartXlsCreating() {
-        if (this.dates != null && this.marks != null && this.students != null) {
+        Boolean canstart = this.dates != null
+                && this.marks != null
+                && this.students != null
+                && this.group != null
+                && this.course != null;
+        if (canstart) {
             _createXls();
         }
     }
@@ -128,8 +141,9 @@ public class JournalXmlCreatorActor extends UntypedActor {
                             this.courseUid,
                             this.studentGroupUid,
                             this.firebaseUrl,
-                            bytes
-                    ),
+                            bytes,
+                            this.group.getName(),
+                            this.course.getName()),
                     this.self()
             );
         } catch (Exception e) {
@@ -149,6 +163,9 @@ public class JournalXmlCreatorActor extends UntypedActor {
                 bos.close();
             } catch (IOException e) {
                 log.error(e.toString());
+            }
+            if (timeoutMessage != null && !timeoutMessage.isCancelled()) {
+                timeoutMessage.cancel();
             }
             getContext().stop(self());
         }
@@ -332,6 +349,38 @@ public class JournalXmlCreatorActor extends UntypedActor {
                             acc.add(item);
                         }
                         self_c.tell(new JournalXmlCreatorActorProtocol.MarksRecieved(acc), self_c);
+                    }
+                    @Override
+                    public void onCancelled(FirebaseError error) {
+                        log.error("Error while retrieving student-marks: %s", error.toString());
+                        self_c.tell(new JournalXmlCreatorActorProtocol.MarksRecieved(new ArrayList<StudentMark>()), self_c);
+                    }
+                });
+
+        rootRef.child("student-groups")
+                .child(studentGroupUid)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        StudentGroup item = dataSnapshot.getValue(StudentGroup.class);
+                        item.setKey(dataSnapshot.getKey());
+                        self_c.tell(new JournalXmlCreatorActorProtocol.StudentGroupRecieved(item), self_c);
+                    }
+                    @Override
+                    public void onCancelled(FirebaseError error) {
+                        log.error("Error while retrieving student-marks: %s", error.toString());
+                        self_c.tell(new JournalXmlCreatorActorProtocol.MarksRecieved(new ArrayList<StudentMark>()), self_c);
+                    }
+                });
+
+        rootRef.child("courses")
+                .child(courseUid)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Course item = dataSnapshot.getValue(Course.class);
+                        item.setKey(dataSnapshot.getKey());
+                        self_c.tell(new JournalXmlCreatorActorProtocol.CourseRecieved(item), self_c);
                     }
                     @Override
                     public void onCancelled(FirebaseError error) {

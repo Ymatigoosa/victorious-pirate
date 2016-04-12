@@ -11,7 +11,7 @@ public class JournalDate {
     private Long timestamp;
 
     @JsonIgnore
-    private String Key;
+    private String key;
 
     @JsonProperty("studentGroupUid-courseUid")
     private String studentGroupUid_CourseUid;
@@ -47,11 +47,11 @@ public class JournalDate {
 
     @JsonIgnore
     public String getKey() {
-        return Key;
+        return key;
     }
 
     @JsonIgnore
     public void setKey(String key) {
-        Key = key;
+        this.key = key;
     }
 }

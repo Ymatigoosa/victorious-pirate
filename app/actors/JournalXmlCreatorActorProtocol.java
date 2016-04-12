@@ -1,8 +1,6 @@
 package actors;
 
-import models.JournalDate;
-import models.Student;
-import models.StudentMark;
+import models.*;
 
 import java.util.List;
 
@@ -13,6 +11,7 @@ public class JournalXmlCreatorActorProtocol {
         public final String courseUid;
         public final String studentGroupUid;
         public final String firebaseUrl;
+
 
         public CreateJournalXml(String academicTermUid, String courseUid, String studentGroupUid, String firebaseUrl) {
             this.academicTermUid = academicTermUid;
@@ -28,13 +27,17 @@ public class JournalXmlCreatorActorProtocol {
         public final String studentGroupUid;
         public final String firebaseUrl;
         public final byte[] file;
+        public final String groupName;
+        public final String courseName;
 
-        public JournalXmlCreated(String academicTermUid, String courseUid, String studentGroupUid, String firebaseUrl, byte[] file) {
+        public JournalXmlCreated(String academicTermUid, String courseUid, String studentGroupUid, String firebaseUrl, byte[] file, String groupName, String courseName) {
             this.academicTermUid = academicTermUid;
             this.courseUid = courseUid;
             this.studentGroupUid = studentGroupUid;
             this.firebaseUrl = firebaseUrl;
             this.file = file;
+            this.groupName = groupName;
+            this.courseName = courseName;
         }
     }
 
@@ -75,6 +78,22 @@ public class JournalXmlCreatorActorProtocol {
 
         public MarksRecieved(List<StudentMark> marks) {
             this.marks = marks;
+        }
+    }
+
+    public static class StudentGroupRecieved {
+        public final StudentGroup group;
+
+        public StudentGroupRecieved(StudentGroup group) {
+            this.group = group;
+        }
+    }
+
+    public static class CourseRecieved {
+        public final Course course;
+
+        public CourseRecieved(Course course) {
+            this.course = course;
         }
     }
 }

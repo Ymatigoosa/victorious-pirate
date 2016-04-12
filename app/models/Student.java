@@ -8,7 +8,7 @@ public class Student {
     private String studentGroupUid;
 
     @JsonIgnore
-    private String Key;
+    private String key;
 
     public Student() {
 
@@ -28,11 +28,11 @@ public class Student {
 
     @JsonIgnore
     public String getKey() {
-        return Key;
+        return key;
     }
 
     @JsonIgnore
     public void setKey(String key) {
-        Key = key;
+        this.key = key;
     }
 }

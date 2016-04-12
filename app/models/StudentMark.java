@@ -11,7 +11,7 @@ public class StudentMark {
     private Integer value;
 
     @JsonIgnore
-    private String Key;
+    private String key;
 
     public StudentMark() {
 
@@ -43,11 +43,11 @@ public class StudentMark {
 
     @JsonIgnore
     public String getKey() {
-        return Key;
+        return key;
     }
 
     @JsonIgnore
     public void setKey(String key) {
-        Key = key;
+        this.key = key;
     }
 }
