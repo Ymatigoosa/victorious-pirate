@@ -41,7 +41,20 @@ public class JournalApiController extends Controller {
                 firebaseUrl
         );
         return FutureConverters.toJava(ask(actor, msg, 10000))
-                .thenApply(response -> ok("azaza"));
+                .thenApply(response -> this.sendXlsxResponse(response));
+    }
+
+    private Result sendXlsxResponse(Object response) {
+        if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlCreated ) {
+            JournalXmlCreatorActorProtocol.JournalXmlCreated msg = (JournalXmlCreatorActorProtocol.JournalXmlCreated)response;
+            return ok(msg.file)
+                    .as("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .withHeader("Content-Disposition", "attachment; filename=journal.xlsx");
+        } else if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlError ) {
+            JournalXmlCreatorActorProtocol.JournalXmlError msg = (JournalXmlCreatorActorProtocol.JournalXmlError)response;
+            return this.internalServerError("createXls returned an error");
+        }
+        return this.internalServerError("unknown error");
     }
 
 }

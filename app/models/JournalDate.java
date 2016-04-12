@@ -1,5 +1,6 @@
 package models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class JournalDate {
@@ -8,6 +9,9 @@ public class JournalDate {
     private Boolean isSum;
     private String studentGroupUid;
     private Long timestamp;
+
+    @JsonIgnore
+    private String Key;
 
     @JsonProperty("studentGroupUid-courseUid")
     private String studentGroupUid_CourseUid;
@@ -39,5 +43,15 @@ public class JournalDate {
     @JsonProperty("studentGroupUid-courseUid")
     public String getStudentGroupUidCourseUid() {
         return studentGroupUid_CourseUid;
+    }
+
+    @JsonIgnore
+    public String getKey() {
+        return Key;
+    }
+
+    @JsonIgnore
+    public void setKey(String key) {
+        Key = key;
     }
 }

@@ -10,7 +10,8 @@ libraryDependencies ++= Seq(
   javaJdbc,
   cache,
   javaWs,
-  "org.apache.poi" % "poi" % "3.9",
+  "org.apache.poi" % "poi" % "3.14",
+  "org.apache.poi" % "poi-ooxml" % "3.14",
   "com.firebase" % "firebase-client-jvm" % "2.5.2"
 )
 

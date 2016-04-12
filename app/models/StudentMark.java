@@ -1,5 +1,7 @@
 package models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class StudentMark {
     private String academicTermUid;
     private String courseUid;
@@ -7,6 +9,9 @@ public class StudentMark {
     private String studentGroupUid;
     private String studentUid;
     private Integer value;
+
+    @JsonIgnore
+    private String Key;
 
     public StudentMark() {
 
@@ -34,5 +39,15 @@ public class StudentMark {
 
     public Integer getValue() {
         return value;
+    }
+
+    @JsonIgnore
+    public String getKey() {
+        return Key;
+    }
+
+    @JsonIgnore
+    public void setKey(String key) {
+        Key = key;
     }
 }
