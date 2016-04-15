@@ -8,8 +8,7 @@ import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import configureStore from 'stores/configureStore';
 import { initAuth } from 'actions/loginPanelActions';
-import { initAuth } from 'actions/loginPanelActions';
-import Layout from 'components/Layout';
+
 injectTapEventPlugin();
 
 const store = configureStore();
@@ -21,6 +20,10 @@ const history = syncHistoryWithStore(browserHistory, store);
 store.dispatch(initAuth());
 
 render(
-  <Layout title='test title' ></Layout>,
+  <Provider store={store}>
+    <Router history={history} >
+      {Routes}
+    </Router>
+  </Provider>,
   document.getElementById('app')
 );
