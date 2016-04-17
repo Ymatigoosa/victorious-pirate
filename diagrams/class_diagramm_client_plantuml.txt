@@ -18,6 +18,10 @@ class Database {
   void getAuth()
 }
 
+class FileStore {
+  void upload(file: byte[])
+}
+
 class Action {
 
 }
@@ -86,5 +90,6 @@ Store <-- Widget  : gets data
 Database <-- Widget : gets data
 Router <-- Widget : gets data
 Widget -> Action: produces
+FileStore <-- Widget : uploads file
 
 @enduml

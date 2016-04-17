@@ -1,0 +1,67 @@
+@startuml
+
+package "controllers" {
+  class Controller {
+    
+  }
+
+  class HomeController {
+    ActionResult index()
+  }
+
+  class ApiController {
+    ActionResult generateJournalXlsx(termId: String, courseId: String, groupId: String)
+    ActionResult generateReport(planId: String)
+  }
+
+  class StaticFileController {
+    ActionResult file(path: String)
+  }
+
+  Controller <|-- HomeController
+  Controller <|-- ApiController
+  Controller <|-- StaticFileController
+}
+
+
+
+package "models" {
+  class JournalXlsxCreator {
+    byte[] create(termId: String, courseId: String, groupId: String)
+  }
+  
+  class ReportCreator {
+    byte[] create(termId: String, courseId: String, groupId: String)
+  }
+  
+  class Database {
+    Object get(path: String)
+    void set(path: String, data: Object)
+    void login(username: String, password: String)
+    void login(token: String)
+    void getAuth()
+  }
+  
+  class FileStore {
+    byte[] get(fileId: String)
+    void upload(file: byte[])
+  }
+  
+  JournalXlsxCreator o-- Database
+  ReportCreator o-- Database
+  ReportCreator o-- FileStore
+}
+
+package "views" {
+  class IndexPage {
+  }
+}
+
+ApiController o-- JournalXlsxCreator
+ApiController o-- ReportCreator
+
+HomeController -> IndexPage : sends
+
+
+
+@enduml
