@@ -56,12 +56,21 @@ class Files extends React.Component {
     this.documentsRef = this.props.firebaseService.ref
       .child('documents');
 
+    this.documentCategoriesRef = this.props.firebaseService.ref
+      .child('document-categories');
+
     this.state = {};
   }
   componentWillMount() {
     this.bindAsArray(
       this.documentsRef,
       'items',
+      (error) => console.error(error)
+    );
+
+    this.bindAsArray(
+      this.documentCategoriesRef,
+      'categories',
       (error) => console.error(error)
     );
 
@@ -184,7 +193,7 @@ class Files extends React.Component {
     const { filepicker } = this.props;
     filepicker.pickAndStore(FILEPICKER_OPTIONS, {},
       (Blobs) => {
-        console.log(JSON.stringify(Blobs));
+        //console.log(JSON.stringify(Blobs));
         const Blob = Blobs[0];
         this.props.actions.saveUploadedFileFromDialog({
           itemKey: item['.key'],
@@ -199,6 +208,17 @@ class Files extends React.Component {
         console.error(FPError.toString());
       }
     );
+  }
+
+  moveToCategory(item, categoryUid) {
+      this.props.actions.saveUploadedFileFromDialog({
+        itemKey: item['.key'],
+        name: item.name,
+        fpfile: item.fpfile,
+        categoryUid: categoryUid,
+        templateUid: item.templateUid,
+        isTemplate: item.isTemplate
+      });
   }
 
   render_item(item) {
