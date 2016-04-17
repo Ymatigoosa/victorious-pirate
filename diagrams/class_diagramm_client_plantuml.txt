@@ -1,0 +1,90 @@
+@startuml
+class Store {
+  state: Map[String, Object] 
+  void dispatch(action: Action)
+}
+
+class Router {
+  url: String
+  void push(url: String)
+  void replace(url: String)
+  void go(index: Int)
+}
+
+class Database {
+  Object get(path: String)
+  void set(path: String, data: Object)
+  void login(username: String, password: String)
+  void getAuth()
+}
+
+class Action {
+
+}
+
+class OpenLeftNavAction {
+  type: String = "OPEN_LEFT_NAV"
+}
+
+class CloseLeftNavAction {
+  type: String = "CLOSE_LEFT_NAV"
+}
+
+class LoginAction {
+  type: String = "LOGIN"
+  Action[] run()
+}
+
+class SetUserAction {
+  type: String = "SET_USER"
+  user: User
+}
+
+class SetUserLoadingAction {
+  type: String = "SET_USER_LOADING"
+}
+
+class CleanUserAction {
+  type: String = "CLEAN_USER"
+}
+
+Action <|-- OpenLeftNavAction 
+Action <|-- CloseLeftNavAction 
+Action <|-- LoginAction 
+Action <|-- SetUserAction 
+Action <|-- SetUserLoadingAction 
+Action <|-- CleanUserAction 
+
+LoginAction --> SetUserAction : produces
+LoginAction --> SetUserLoadingAction : produces
+LoginAction --> CleanUserAction : produces
+
+class Widget {
+  void render()
+}
+
+class Layout {
+  void render()
+}
+
+class FilesPage {
+  void render()
+}
+
+class FilesDialog {
+  void render()
+}
+
+Widget <|-- Layout 
+Widget <|-- FilesPage 
+Widget <|-- FilesDialog 
+FilesPage --* FilesDialog
+
+Store --> Action: consumes
+
+Store <-- Widget  : gets data
+Database <-- Widget : gets data
+Router <-- Widget : gets data
+Widget -> Action: produces
+
+@enduml
