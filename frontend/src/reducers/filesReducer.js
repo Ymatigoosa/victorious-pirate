@@ -5,7 +5,8 @@ const {
   SET_CATTEGORY_SEARCH,
   SET_FILES_SEARCH,
   SET_CATEGORY_DIALOG,
-  SET_FILE_UPLOAD_DIALOG
+  SET_FILE_UPLOAD_DIALOG,
+  SET_SNACKBAR_STATE
 } = ActionTypes;
 
 const initialState = {
@@ -26,6 +27,10 @@ const initialState = {
     categoryUid: '',
     templateUid: '',
     isTemplate: false
+  },
+  snackbar: {
+    text: '',
+    isOpen: false
   }
 };
 
@@ -38,6 +43,11 @@ export default createReducer(initialState, {
   [SET_FILES_SEARCH]: (state, action) => ({
     ...state,
     files_search: action.playload
+  }),
+
+  [SET_SNACKBAR_STATE]: (state, action) => ({
+    ...state,
+    snackbar: {...state.snackbar, ...action.playload}
   }),
 
   [SET_FILE_UPLOAD_DIALOG]: (state, action) => ({

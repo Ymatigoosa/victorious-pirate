@@ -72,6 +72,10 @@ class FileDialog extends React.Component {
     this.props.actions.setFileUploadDialogState({templateUid: value, fpfile: null})
   }
 
+  onCategoryChange(event, index, value) {
+    this.props.actions.setFileUploadDialogState({categoryUid: value})
+  }
+
   render() {
     const {
       itemKey,
@@ -82,9 +86,14 @@ class FileDialog extends React.Component {
       templateUid,
       isTemplate,
       showTemplates,
-      templates
+      templates,
+      categories
     } = this.props;
-    //console.log(this.props);
+
+    const filteredCategories = Array.isArray(categories)
+      ? categories
+      : [];
+
     var actions = [
       <FlatButton
         label="Отмена"
@@ -127,7 +136,16 @@ class FileDialog extends React.Component {
           value={name}
           onChange={(e) => this.props.actions.setFileUploadDialogState({name: e.target.value})} />
         <br />
+        <ToggleDisplay if={state === 'edit'}>
+          {'Категория: '}
+          <DropDownMenu value={categoryUid} onChange={this.onCategoryChange.bind(this)}>
+          {filteredCategories.map( (item) =>
+            <MenuItem value={item['.key']} key={item['.key']} primaryText={item.name} />
+          )}
+          </DropDownMenu>
+        </ToggleDisplay>
         <ToggleDisplay if={showTemplates}>
+          {'Шаблон: '}
           <DropDownMenu value={templateUid} onChange={this.onTemplateChange.bind(this)}>
           <MenuItem value={''} primaryText={'Выберите шаблон'} />
           {templates.map( (item) =>

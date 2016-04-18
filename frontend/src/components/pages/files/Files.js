@@ -29,6 +29,8 @@ import shallowequal from 'shallowequal';
 import FileDialog from 'components/pages/files/FileDialog'
 import { Actions } from 'actions/filesActions';
 import { isNullOrWhitespace } from 'utils/Utils';
+import Snackbar from 'material-ui/lib/snackbar';
+import ArrowDropRight from 'material-ui/lib/svg-icons/navigation-arrow-drop-right';
 
 const iconButtonElement = (
   <IconButton
@@ -63,7 +65,7 @@ class Files extends React.Component {
   }
   componentWillMount() {
     this.bindAsArray(
-      this.documentsRef,
+      this.documentsRef.orderByChild('categoryUid').equalTo(this.props.params.categoryUid),
       'items',
       (error) => console.error(error)
     );
@@ -210,15 +212,21 @@ class Files extends React.Component {
     );
   }
 
-  moveToCategory(item, categoryUid) {
-      this.props.actions.saveUploadedFileFromDialog({
-        itemKey: item['.key'],
-        name: item.name,
-        fpfile: item.fpfile,
-        categoryUid: categoryUid,
-        templateUid: item.templateUid,
-        isTemplate: item.isTemplate
-      });
+  generateReport(item) {
+    fetch(`/api/generatePlanReport/${item['.key']}`).then((response) => {
+      if (response.ok) {
+        return response;
+      } else {
+        var error = new Error(response.statusText);
+        error.response = response;
+        throw error;
+      }
+    }).then(() => {
+      this.props.actions.setSnackbarState({text: 'Отчет сгенерирован', isOpen: true});
+    }).catch((ex) => {
+      console.error('generatePlanReport failed', ex);
+      this.props.actions.setSnackbarState({text: 'Ошибка при формировании отчета', isOpen: true});
+    });
   }
 
   render_item(item) {
@@ -257,8 +265,8 @@ class Files extends React.Component {
   }
 
   render() {
-    const { search, user } = this.props;
-    const { items, category } = this.state;
+    const { search, user, snackbar } = this.props;
+    const { items, category, categories } = this.state;
 
     if (!user.isInRole(['admin', 'clerk', 'teacher'])) {
       return <div style={{padding:'20px'}}>У вас нет прав для просмотра этой страницы</div>
@@ -294,7 +302,13 @@ class Files extends React.Component {
           <Subheader>Выберите файл</Subheader>
           { filtered.map((i) => this.render_item(i)) }
         </List>
-        <FileDialog templates={items === void 0 || items === null ? [] : items.filter((value) => value.isTemplate)} />
+        <FileDialog categories={categories} templates={items === void 0 || items === null ? [] : items.filter((value) => value.isTemplate)} />
+        <Snackbar
+          open={snackbar.isOpen}
+          message="Event added to your calendar"
+          autoHideDuration={4000}
+          onRequestClose={() => this.props.actions.setSnackbarState({text: '', isOpen: false})}
+        />
       </div>
     );
   }
@@ -308,7 +322,8 @@ function mapStateToProps(state, ownProps) {
     search: state.files.files_search,
     firebaseService: state.firebaseService,
     filepicker: state.filepicker,
-    user: state.user
+    user: state.user,
+    snackbar: state.files.snackbar
   };
 }
 

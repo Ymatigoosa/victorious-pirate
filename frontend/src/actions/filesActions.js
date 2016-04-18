@@ -5,7 +5,8 @@ export const ActionTypes = keyMirror({
   SET_CATTEGORY_SEARCH: null,
   SET_FILES_SEARCH: null,
   SET_CATEGORY_DIALOG: null,
-  SET_FILE_UPLOAD_DIALOG: null
+  SET_FILE_UPLOAD_DIALOG: null,
+  SET_SNACKBAR_STATE: null
 });
 
 export const Actions = {
@@ -17,6 +18,11 @@ export const Actions = {
   setFilesSearch: (search) => ({
     type: ActionTypes.SET_FILES_SEARCH,
     playload: search
+  }),
+
+  setSnackbarState: (newstate) => ({
+    type: ActionTypes.SET_SNACKBAR_STATE,
+    playload: newstate
   }),
 
   setCategoryDialogState: (playload) => ({
