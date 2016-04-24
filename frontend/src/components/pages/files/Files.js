@@ -213,7 +213,14 @@ class Files extends React.Component {
   }
 
   generateReport(item) {
-    fetch(`/api/generatePlanReport/${item['.key']}`).then((response) => {
+    const targetfile = isNullOrWhitespace(item.templateUid)
+        ? item
+        : this.state.items.filter((value) => value['.key'] === item.templateUid)[0];
+    if (targetfile === null || targetfile === void 0) {
+      alert('Файл не найден!\nВозможно был использован шаблон, который удален');
+      return;
+    }
+    fetch(`/api/generatePlanReport/${targetfile['.key']}`).then((response) => {
       if (response.ok) {
         return response;
       } else {
