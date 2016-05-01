@@ -3,16 +3,12 @@ package actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.japi.function.Procedure;
 import akka.japi.pf.ReceiveBuilder;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import models.*;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.xssf.usermodel.*;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
@@ -20,13 +16,10 @@ import scala.PartialFunction;
 import scala.concurrent.duration.Duration;
 import scala.runtime.BoxedUnit;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class ReportGeneratorActor extends AbstractActor {
 
@@ -48,7 +41,7 @@ public class ReportGeneratorActor extends AbstractActor {
     final PartialFunction<Object, BoxedUnit> initialState() {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.GenerateReportlXml.class, msg -> {
-                    processGenerateReportlXml(msg);
+                    processGenerateReportXml(msg);
                 })
                 .matchEquals("timeout", msg -> {
                     this.terminateSilently();
@@ -58,10 +51,10 @@ public class ReportGeneratorActor extends AbstractActor {
     final PartialFunction<Object, BoxedUnit> waitingForFirebaseDocument(final ActorRef parent, WSClient ws) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedDocument.class, msg -> {
-                    this.processRecievedDocument(msg, parent, ws);
+                    this.processReceivedDocument(msg, parent, ws);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
-                    this.processRecievedError(msg, parent);
+                    this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
                     this.terminateWithFailureResponse(parent, msg);
@@ -71,17 +64,17 @@ public class ReportGeneratorActor extends AbstractActor {
     final PartialFunction<Object, BoxedUnit> waitingForFilepickerDocument(final ActorRef parent, final Document document, WSClient ws) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedFile.class, msg -> {
-                    this.processRecievedFile(msg, parent, ws);
+                    this.processReceivedFile(msg, parent, ws);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
-                    this.processRecievedError(msg, parent);
+                    this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
                     this.terminateWithFailureResponse(parent, msg);
                 }).build();
     }
 
-    private void processGenerateReportlXml(ReportGeneratorActorProtocol.GenerateReportlXml msg) {
+    private void processGenerateReportXml(ReportGeneratorActorProtocol.GenerateReportlXml msg) {
         Firebase rootRef = new Firebase(msg.firebaseUrl);
         final ActorRef self_c = this.self();
 
@@ -104,11 +97,11 @@ public class ReportGeneratorActor extends AbstractActor {
         getContext().become(waitingForFirebaseDocument(this.sender(), msg.ws));
     }
 
-    private void processRecievedError(ReportGeneratorActorProtocol.RecievedError msg, ActorRef parent) {
+    private void processReceivedError(ReportGeneratorActorProtocol.RecievedError msg, ActorRef parent) {
         terminateWithFailureResponse(parent, msg.msg);
     }
 
-    private void processRecievedDocument(ReportGeneratorActorProtocol.RecievedDocument msg, ActorRef parent, WSClient ws) {
+    private void processReceivedDocument(ReportGeneratorActorProtocol.RecievedDocument msg, ActorRef parent, WSClient ws) {
         final String filename = msg.document.getFpfile().getFilename();
         final Boolean isFilenameGood = filename.endsWith(".doc") || filename.endsWith(".docx");
         if (isFilenameGood) {
@@ -123,7 +116,7 @@ public class ReportGeneratorActor extends AbstractActor {
         }
     }
 
-    private void processRecievedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws) {
+    private void processReceivedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws) {
         if (msg.file.length < 1) {
             terminateWithFailureResponse(parent, "received 0 bytes from file storage");
         } else {
@@ -132,6 +125,7 @@ public class ReportGeneratorActor extends AbstractActor {
                     .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".txt")
                     .setQueryParameter("key", "APNVn3FlR6yU5HyVrtxIgz")
                     .post("123456789");
+            this.terminateWithSuccessResponse(parent);
         }
     }
 
