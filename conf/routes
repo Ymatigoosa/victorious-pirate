@@ -6,5 +6,6 @@
 GET     /public/*file               controllers.Assets.at(path="/public", file)
 GET     /assets/*file               controllers.Assets.at(path="/public/assets", file)
 GET     /api/journal-xml/:academicTermUid/:courseUid/:studentGroupUid               controllers.JournalApiController.generateXls(academicTermUid, courseUid, studentGroupUid)
+GET     /api/generateReport/:documentUid                                            controllers.JournalApiController.generateReport(documentUid)
 GET     /                           controllers.HomeController.index(path = "")
 GET     /*path                      controllers.HomeController.index(path)

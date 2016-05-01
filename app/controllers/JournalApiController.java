@@ -2,8 +2,11 @@ package controllers;
 
 import actors.JournalXmlCreatorActor;
 import actors.JournalXmlCreatorActorProtocol;
+import actors.ReportGeneratorActor;
+import actors.ReportGeneratorActorProtocol;
 import akka.actor.*;
 import play.Logger;
+import play.libs.ws.WSClient;
 import play.mvc.*;
 import play.Configuration;
 import scala.compat.java8.FutureConverters;
@@ -22,10 +25,12 @@ public class JournalApiController extends Controller {
 
     private final ActorSystem system;
     private final Configuration configuration;
+    private final WSClient ws;
 
-    @Inject public JournalApiController(ActorSystem system, Configuration configuration) {
+    @Inject public JournalApiController(ActorSystem system, Configuration configuration, WSClient ws) {
         this.system = system;
         this.configuration = configuration;
+        this.ws = ws;
     }
 
     /**
@@ -46,6 +51,17 @@ public class JournalApiController extends Controller {
                 .thenApply(response -> this.sendXlsxResponse(response));
     }
 
+    public CompletionStage<Result> generateReport(String documentUid) {
+        ActorRef actor = system.actorOf(ReportGeneratorActor.props());
+        String firebaseUrl = this.configuration.getString("firebaseUrl");
+        ReportGeneratorActorProtocol.GenerateReportlXml msg = new ReportGeneratorActorProtocol.GenerateReportlXml(
+                ws,
+                documentUid,
+                firebaseUrl);
+        return FutureConverters.toJava(ask(actor, msg, 10000))
+                .thenApply(response -> sendReportResponse(response));
+    }
+
     private String getFilename(String courseName, String groupName) {
         String raw = courseName + " "+ groupName + ".xlsx";
         try {
@@ -64,6 +80,17 @@ public class JournalApiController extends Controller {
         } else if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlError ) {
             JournalXmlCreatorActorProtocol.JournalXmlError msg = (JournalXmlCreatorActorProtocol.JournalXmlError)response;
             return this.internalServerError("createXls returned an error");
+        }
+        return this.internalServerError("unknown error");
+    }
+
+    private Result sendReportResponse(Object response) {
+        if (response instanceof ReportGeneratorActorProtocol.GenerationSucceeded ) {
+            //ReportGeneratorActorProtocol.GenerationSucceeded msg = (ReportGeneratorActorProtocol.GenerationSucceeded)response;
+            return ok("good");
+        } else if (response instanceof ReportGeneratorActorProtocol.GenerationFailure ) {
+            ReportGeneratorActorProtocol.GenerationFailure msg = (ReportGeneratorActorProtocol.GenerationFailure)response;
+            return this.internalServerError(msg.error);
         }
         return this.internalServerError("unknown error");
     }

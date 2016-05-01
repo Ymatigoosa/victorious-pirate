@@ -39,7 +39,7 @@ public class Document {
         return fpfile;
     }
 
-    public Boolean getTemplate() {
+    public Boolean getIsTemplate() {
         return isTemplate;
     }
 

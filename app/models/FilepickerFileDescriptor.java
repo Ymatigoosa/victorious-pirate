@@ -2,7 +2,7 @@ package models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties({"Id"})
+@JsonIgnoreProperties({"id"})
 public class FilepickerFileDescriptor {
     private String client;
     private String filename;
@@ -23,7 +23,7 @@ public class FilepickerFileDescriptor {
         return filename;
     }
 
-    public Boolean getWriteable() {
+    public Boolean getIsWriteable() {
         return isWriteable;
     }
 
