@@ -9,10 +9,12 @@ public class ReportGeneratorActorProtocol {
 
         public final WSClient ws;
         public final String documentUid;
+        public final String firebaseUrl;
 
-        public GenerateReportlXml(WSClient ws, String documentUid) {
+        public GenerateReportlXml(WSClient ws, String documentUid, String firebaseUrl) {
             this.ws = ws;
             this.documentUid = documentUid;
+            this.firebaseUrl = firebaseUrl;
         }
     }
 
@@ -51,6 +53,15 @@ public class ReportGeneratorActorProtocol {
     public static class GenerationSucceeded {
 
         public GenerationSucceeded() {
+        }
+    }
+
+    public static class GenerationFailure {
+
+        public final String error;
+
+        public GenerationFailure(String error) {
+            this.error = error;
         }
     }
 }
