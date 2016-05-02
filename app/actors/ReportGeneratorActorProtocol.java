@@ -1,6 +1,8 @@
 package actors;
 
+import com.google.common.collect.ImmutableList;
 import models.Document;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import play.libs.ws.*;
 
 public class ReportGeneratorActorProtocol {
@@ -62,6 +64,43 @@ public class ReportGeneratorActorProtocol {
 
         public GenerationFailure(String error) {
             this.error = error;
+        }
+    }
+
+    //XWPFParagraph
+    public static class ParagraphFinded {
+
+        public final XWPFParagraph current;
+
+        public final ImmutableList<XWPFParagraph> rest;
+
+        public ParagraphFinded(XWPFParagraph current, ImmutableList<XWPFParagraph> rest) {
+            this.current = current;
+            this.rest = rest;
+        }
+    }
+
+    public static class HeaderFinded {
+
+        public final XWPFParagraph current;
+
+        public final ImmutableList<XWPFParagraph> rest;
+
+        public final ReportGeneratorActor.TableMapping mapper;
+
+        public HeaderFinded(XWPFParagraph current, ImmutableList<XWPFParagraph> rest, ReportGeneratorActor.TableMapping mapper) {
+            this.current = current;
+            this.rest = rest;
+            this.mapper = mapper;
+        }
+    }
+
+    public static class ParsingEnded {
+
+        public final ReportGeneratorActor.TableMapping.Result generatedTables;
+
+        public ParsingEnded(ReportGeneratorActor.TableMapping.Result generatedTables) {
+            this.generatedTables = generatedTables;
         }
     }
 }

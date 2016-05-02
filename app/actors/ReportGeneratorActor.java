@@ -9,6 +9,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import models.*;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
@@ -20,6 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class ReportGeneratorActor extends AbstractActor {
 
@@ -76,6 +78,7 @@ public class ReportGeneratorActor extends AbstractActor {
 
     private void processGenerateReportXml(ReportGeneratorActorProtocol.GenerateReportlXml msg) {
         Firebase rootRef = new Firebase(msg.firebaseUrl);
+        //rootRef.authWithCustomToken();
         final ActorRef self_c = this.self();
 
         rootRef.child("documents")
@@ -141,5 +144,38 @@ public class ReportGeneratorActor extends AbstractActor {
 
     private void terminateSilently() {
         this.getContext().stop(this.self());
+    }
+
+    public static class TableMapping {
+
+        public final int indexInReport;
+
+        public final String header;
+
+        private final Function<XWPFTable, XWPFTable> _map;
+
+        public TableMapping(int indexInReport, String header, Function<XWPFTable, XWPFTable> map) {
+            this.indexInReport = indexInReport;
+            this.header = header;
+            this._map = map;
+        }
+
+        public TableMapping.Result map(XWPFTable table) {
+            try {
+                return new TableMapping.Result(this, this._map.apply(table));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        public static class Result {
+            public final TableMapping mapper;
+            public final XWPFTable table;
+
+            public Result(TableMapping mapper, XWPFTable table) {
+                this.mapper = mapper;
+                this.table = table;
+            }
+        }
     }
 }
