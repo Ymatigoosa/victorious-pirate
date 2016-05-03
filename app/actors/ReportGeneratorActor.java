@@ -7,8 +7,12 @@ import akka.japi.pf.ReceiveBuilder;
 import com.firebase.client.*;
 import com.firebase.security.token.TokenGenerator;
 import com.firebase.security.token.TokenOptions;
+import com.google.common.collect.ImmutableList;
 import models.*;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
@@ -20,6 +24,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class ReportGeneratorActor extends AbstractActor {
@@ -172,31 +177,95 @@ public class ReportGeneratorActor extends AbstractActor {
 
         public final int indexInReport;
 
+        public final String searchInPlan;
+
         public final String header;
 
-        private final Function<XWPFTable, XWPFTable> _map;
+        private final BiConsumer<XWPFTable, XWPFTable> _map;
 
-        public TableMapping(int indexInReport, String header, Function<XWPFTable, XWPFTable> map) {
+        public TableMapping(int indexInReport, String searchInPlan, String header, BiConsumer<XWPFTable, XWPFTable> map) {
             this.indexInReport = indexInReport;
+            this.searchInPlan = searchInPlan;
             this.header = header;
             this._map = map;
         }
 
-        public TableMapping.Result map(XWPFTable table) {
+        public TableCreator map(XWPFTable table) {
             try {
-                return new TableMapping.Result(this, this._map.apply(table));
+                return new TableCreator(this, table);
             } catch (Exception e) {
                 return null;
             }
         }
 
-        public static class Result {
+        public static class TableCreator {
             public final TableMapping mapper;
             public final XWPFTable table;
 
-            public Result(TableMapping mapper, XWPFTable table) {
+            public TableCreator(TableMapping mapper, XWPFTable table) {
                 this.mapper = mapper;
                 this.table = table;
+            }
+
+            public void create(XWPFDocument document) {
+                XWPFTable newtable = document.createTable();
+                mapper._map.accept(table, newtable);
+            }
+        }
+    }
+
+    private ImmutableList<TableMapping> getMappings() {
+        List<TableMapping> result = new ArrayList<>();
+
+        // Таблица 2 – План работы научно-методического семинара «Информационно-измерительные и управляющие системы»	Таблица 1 – Сведения о работе научно-методического семинара «Информационно-измерительные и управляющие системы»
+        result.add(new TableMapping(
+                1,
+                "Таблица 2",
+                "Таблица 1 – Сведения о работе научно-методического семинара «Информационно-измерительные и управляющие системы»",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableRowOne.getCell(0).setText("№ п/п");
+                    tableRowOne.addNewTableCell().setText("Дата проведения");
+                    tableRowOne.addNewTableCell().setText("Тема семинара");
+                    tableRowOne.addNewTableCell().setText("Рассмотренные вопросы");
+                    tableRowOne.addNewTableCell().setText("Докладчики");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableRowTwo.getCell(0).setText("1");
+                    tableRowTwo.getCell(1).setText("2");
+                    tableRowTwo.getCell(2).setText("3");
+                    tableRowTwo.getCell(3).setText("4");
+                    tableRowTwo.getCell(4).setText("5");
+
+                    for (int i = 1; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        newrow.getCell(3).setText("");
+                        moveText(currentrow, 3, newrow, 4);
+                    }
+                }
+        ));
+        return new ImmutableList.Builder<TableMapping>()
+                .addAll(result)
+                .build();
+    }
+
+    private void moveText(XWPFTableRow oldrow, int oldindex, XWPFTableRow newrow, int newindex) {
+        XWPFTableCell newcell = newrow.getCell(newindex);
+        if (newcell != null) {
+            XWPFTableCell oldcell = oldrow.getCell(oldindex);
+            if (oldcell != null) {
+                newcell.setText(oldcell.getText());
+            } else {
+                newcell.setText("");
             }
         }
     }

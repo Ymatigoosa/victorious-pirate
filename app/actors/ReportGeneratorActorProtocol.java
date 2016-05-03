@@ -101,9 +101,9 @@ public class ReportGeneratorActorProtocol {
 
     public static class ParsingEnded {
 
-        public final ReportGeneratorActor.TableMapping.Result generatedTables;
+        public final ReportGeneratorActor.TableMapping.TableCreator generatedTables;
 
-        public ParsingEnded(ReportGeneratorActor.TableMapping.Result generatedTables) {
+        public ParsingEnded(ReportGeneratorActor.TableMapping.TableCreator generatedTables) {
             this.generatedTables = generatedTables;
         }
     }
