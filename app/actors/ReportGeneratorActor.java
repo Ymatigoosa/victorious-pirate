@@ -78,6 +78,89 @@ public class ReportGeneratorActor extends AbstractActor {
                 }).build();
     }
 
+    final PartialFunction<Object, BoxedUnit> parsing_waitingForHeader(
+            final ActorRef parent,
+            final Document document,
+            WSClient ws,
+            String firebaseSecret,
+            String filepickerSecret,
+            ImmutableList<TableMapping.TableCreator> creators,
+            ImmutableList<TableMapping> mappers) {
+        return ReceiveBuilder.
+                match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
+                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.findFirst();
+                    if (currentIBodyElementOpt.isPresent()) {
+                        IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
+                        if (currentIBodyElement instanceof XWPFParagraph ) {
+                            XWPFParagraph current = (XWPFParagraph)currentIBodyElement;
+                            Optional<TableMapping> matchedmapperopt = mappers
+                                    .stream()
+                                    .filter(i -> current.searchText(i.searchInPlan, new PositionInParagraph()) != null)
+                                    .findFirst();
+                            if (currentIBodyElementOpt.isPresent()) {
+                                this.context().become(
+                                        this.parsing_waitingForTable(parent,
+                                                document,
+                                                ws,
+                                                firebaseSecret,
+                                                filepickerSecret,
+                                                creators,
+                                                mappers,
+                                                matchedmapperopt.get()
+                                        )
+                                );
+                            }
+                        }
+                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(msg.rest.skip(1)), this.self());
+                    } else {
+                        this.self().tell(new ReportGeneratorActorProtocol.ParsingEnded(), this.self());
+                    }
+                })
+                .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
+                    // todo
+                })
+                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    this.processReceivedError(msg, parent);
+                })
+                .matchEquals("timeout", msg -> {
+                    this.terminateWithFailureResponse(parent, msg);
+                }).build();
+    }
+
+    final PartialFunction<Object, BoxedUnit> parsing_waitingForTable(
+            final ActorRef parent,
+            final Document document,
+            WSClient ws,
+            String firebaseSecret,
+            String filepickerSecret,
+            ImmutableList<TableMapping.TableCreator> creators,
+            ImmutableList<TableMapping> mappers,
+            TableMapping currentmapping) {
+        return ReceiveBuilder.
+                match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
+                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.findFirst();
+                    if (currentIBodyElementOpt.isPresent()) {
+                        IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
+                        if (currentIBodyElement instanceof XWPFTable) {
+                            XWPFTable current = (XWPFTable)currentIBodyElement;
+                            // todo
+                        }
+                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(msg.rest.skip(1)), this.self());
+                    } else {
+                        this.self().tell(new ReportGeneratorActorProtocol.ParsingEnded(), this.self());
+                    }
+                })
+                .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
+                    // todo
+                })
+                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    this.processReceivedError(msg, parent);
+                })
+                .matchEquals("timeout", msg -> {
+                    this.terminateWithFailureResponse(parent, msg);
+                }).build();
+    }
+
     private void processGenerateReportXml(ReportGeneratorActorProtocol.GenerateReportlXml msg) {
         Firebase rootRef = new Firebase(msg.firebaseUrl);
         //rootRef.authWithCustomToken();

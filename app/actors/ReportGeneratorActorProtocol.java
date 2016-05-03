@@ -2,8 +2,11 @@ package actors;
 
 import com.google.common.collect.ImmutableList;
 import models.Document;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import play.libs.ws.*;
+
+import java.util.stream.Stream;
 
 public class ReportGeneratorActorProtocol {
 
@@ -74,37 +77,16 @@ public class ReportGeneratorActorProtocol {
     //XWPFParagraph
     public static class ParagraphFinded {
 
-        public final XWPFParagraph current;
+        public final Stream<IBodyElement> rest;
 
-        public final ImmutableList<XWPFParagraph> rest;
-
-        public ParagraphFinded(XWPFParagraph current, ImmutableList<XWPFParagraph> rest) {
-            this.current = current;
+        public ParagraphFinded(Stream<IBodyElement> rest) {
             this.rest = rest;
-        }
-    }
-
-    public static class HeaderFinded {
-
-        public final XWPFParagraph current;
-
-        public final ImmutableList<XWPFParagraph> rest;
-
-        public final ReportGeneratorActor.TableMapping mapper;
-
-        public HeaderFinded(XWPFParagraph current, ImmutableList<XWPFParagraph> rest, ReportGeneratorActor.TableMapping mapper) {
-            this.current = current;
-            this.rest = rest;
-            this.mapper = mapper;
         }
     }
 
     public static class ParsingEnded {
 
-        public final ReportGeneratorActor.TableMapping.TableCreator generatedTables;
-
-        public ParsingEnded(ReportGeneratorActor.TableMapping.TableCreator generatedTables) {
-            this.generatedTables = generatedTables;
+        public ParsingEnded() {
         }
     }
 }
