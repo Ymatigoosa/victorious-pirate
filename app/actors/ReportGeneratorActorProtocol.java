@@ -12,11 +12,15 @@ public class ReportGeneratorActorProtocol {
         public final WSClient ws;
         public final String documentUid;
         public final String firebaseUrl;
+        public final String firebaseSecret;
+        public final String filepickerSecret;
 
-        public GenerateReportlXml(WSClient ws, String documentUid, String firebaseUrl) {
+        public GenerateReportlXml(WSClient ws, String documentUid, String firebaseUrl, String firebaseSecret, String filepickerSecret) {
             this.ws = ws;
             this.documentUid = documentUid;
             this.firebaseUrl = firebaseUrl;
+            this.firebaseSecret = firebaseSecret;
+            this.filepickerSecret = filepickerSecret;
         }
     }
 

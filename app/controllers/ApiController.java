@@ -5,7 +5,6 @@ import actors.JournalXmlCreatorActorProtocol;
 import actors.ReportGeneratorActor;
 import actors.ReportGeneratorActorProtocol;
 import akka.actor.*;
-import play.Logger;
 import play.libs.ws.WSClient;
 import play.mvc.*;
 import play.Configuration;
@@ -21,13 +20,13 @@ import static akka.pattern.Patterns.ask;
  * This controller contains an action to handle HTTP requests
  * to the application's home page.
  */
-public class JournalApiController extends Controller {
+public class ApiController extends Controller {
 
     private final ActorSystem system;
     private final Configuration configuration;
     private final WSClient ws;
 
-    @Inject public JournalApiController(ActorSystem system, Configuration configuration, WSClient ws) {
+    @Inject public ApiController(ActorSystem system, Configuration configuration, WSClient ws) {
         this.system = system;
         this.configuration = configuration;
         this.ws = ws;
@@ -54,10 +53,14 @@ public class JournalApiController extends Controller {
     public CompletionStage<Result> generateReport(String documentUid) {
         ActorRef actor = system.actorOf(ReportGeneratorActor.props());
         String firebaseUrl = this.configuration.getString("firebaseUrl");
+        String filepickerSecret = this.configuration.getString("filepickerSecret");
+        String firebaseSecret = this.configuration.getString("firebaseSecret");
         ReportGeneratorActorProtocol.GenerateReportlXml msg = new ReportGeneratorActorProtocol.GenerateReportlXml(
                 ws,
                 documentUid,
-                firebaseUrl);
+                firebaseUrl,
+                firebaseSecret,
+                filepickerSecret);
         return FutureConverters.toJava(ask(actor, msg, 10000))
                 .thenApply(response -> sendReportResponse(response));
     }

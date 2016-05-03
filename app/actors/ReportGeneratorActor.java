@@ -4,10 +4,9 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
+import com.firebase.client.*;
+import com.firebase.security.token.TokenGenerator;
+import com.firebase.security.token.TokenOptions;
 import models.*;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import play.libs.ws.WSRequest;
@@ -50,10 +49,10 @@ public class ReportGeneratorActor extends AbstractActor {
                 }).build();
     }
 
-    final PartialFunction<Object, BoxedUnit> waitingForFirebaseDocument(final ActorRef parent, WSClient ws) {
+    final PartialFunction<Object, BoxedUnit> waitingForFirebaseDocument(final ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedDocument.class, msg -> {
-                    this.processReceivedDocument(msg, parent, ws);
+                    this.processReceivedDocument(msg, parent, ws, firebaseSecret, filepickerSecret);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -63,10 +62,10 @@ public class ReportGeneratorActor extends AbstractActor {
                 }).build();
     }
 
-    final PartialFunction<Object, BoxedUnit> waitingForFilepickerDocument(final ActorRef parent, final Document document, WSClient ws) {
+    final PartialFunction<Object, BoxedUnit> waitingForFilepickerDocument(final ActorRef parent, final Document document, WSClient ws, String firebaseSecret, String filepickerSecret) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedFile.class, msg -> {
-                    this.processReceivedFile(msg, parent, ws);
+                    this.processReceivedFile(msg, parent, ws, firebaseSecret, filepickerSecret);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -80,6 +79,17 @@ public class ReportGeneratorActor extends AbstractActor {
         Firebase rootRef = new Firebase(msg.firebaseUrl);
         //rootRef.authWithCustomToken();
         final ActorRef self_c = this.self();
+        rootRef.authWithCustomToken(this.getToken(msg.firebaseSecret), new Firebase.AuthResultHandler() {
+            @Override
+            public void onAuthenticated(AuthData authData) {
+
+            }
+
+            @Override
+            public void onAuthenticationError(FirebaseError firebaseError) {
+                self_c.tell(new ReportGeneratorActorProtocol.RecievedError("auth failed"), self_c);
+            }
+        });
 
         rootRef.child("documents")
                 .child(msg.documentUid)
@@ -97,14 +107,26 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 });
 
-        getContext().become(waitingForFirebaseDocument(this.sender(), msg.ws));
+        getContext().become(waitingForFirebaseDocument(this.sender(), msg.ws, msg.firebaseSecret, msg.filepickerSecret));
+    }
+
+    private String getToken(String firebaseSecret) {
+        Map<String, Object> authPayload = new HashMap<String, Object>();
+        authPayload.put("uid", "1");
+
+        TokenOptions tokenOptions = new TokenOptions();
+        tokenOptions.setAdmin(true);
+
+        TokenGenerator tokenGenerator = new TokenGenerator(firebaseSecret);
+        String token = tokenGenerator.createToken(authPayload, tokenOptions);
+        return token;
     }
 
     private void processReceivedError(ReportGeneratorActorProtocol.RecievedError msg, ActorRef parent) {
         terminateWithFailureResponse(parent, msg.msg);
     }
 
-    private void processReceivedDocument(ReportGeneratorActorProtocol.RecievedDocument msg, ActorRef parent, WSClient ws) {
+    private void processReceivedDocument(ReportGeneratorActorProtocol.RecievedDocument msg, ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret) {
         final String filename = msg.document.getFpfile().getFilename();
         final Boolean isFilenameGood = filename.endsWith(".doc") || filename.endsWith(".docx");
         if (isFilenameGood) {
@@ -113,20 +135,20 @@ public class ReportGeneratorActor extends AbstractActor {
                 this.self().tell(new ReportGeneratorActorProtocol.RecievedFile(response), this.self());
                 return response;
             });
-            getContext().become(this.waitingForFilepickerDocument(parent, msg.document, ws));
+            getContext().become(this.waitingForFilepickerDocument(parent, msg.document, ws, firebaseSecret, filepickerSecret));
         } else {
-            terminateWithFailureResponse(parent, "bad filename");
+            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("bad filename"), this.self());
         }
     }
 
-    private void processReceivedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws) {
+    private void processReceivedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret) {
         if (msg.file.length < 1) {
             terminateWithFailureResponse(parent, "received 0 bytes from file storage");
         } else {
             ws.url("https://www.filepicker.io/api/store/S3")
                     .setQueryParameter("base64decode", "false")
                     .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".txt")
-                    .setQueryParameter("key", "APNVn3FlR6yU5HyVrtxIgz")
+                    .setQueryParameter("key", filepickerSecret)
                     .post("123456789");
             this.terminateWithSuccessResponse(parent);
         }
