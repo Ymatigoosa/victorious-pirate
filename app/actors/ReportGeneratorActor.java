@@ -9,10 +9,8 @@ import com.firebase.security.token.TokenGenerator;
 import com.firebase.security.token.TokenOptions;
 import com.google.common.collect.ImmutableList;
 import models.*;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import models.Document;
+import org.apache.poi.xwpf.usermodel.*;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
@@ -263,7 +261,8 @@ public class ReportGeneratorActor extends AbstractActor {
         if (newcell != null) {
             XWPFTableCell oldcell = oldrow.getCell(oldindex);
             if (oldcell != null) {
-                newcell.setText(oldcell.getText());
+                newcell.removeParagraph(0);
+                oldcell.getParagraphs().forEach(p -> newcell.addParagraph(p));
             } else {
                 newcell.setText("");
             }
