@@ -348,7 +348,7 @@ public class ReportGeneratorActor extends AbstractActor {
             ByteArrayInputStream bis = new ByteArrayInputStream(msg.file);
             try {
                 XWPFDocument docx = new XWPFDocument(bis);
-                docx.getBodyElements();
+                this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(docx.getBodyElements().stream()), this.self());
                 this.getContext().become(this.parsing_waitingForHeader(
                         parent,
                         document,
