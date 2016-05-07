@@ -1,9 +1,8 @@
 package actors;
 
-import com.google.common.collect.ImmutableList;
 import models.Document;
+import models.FilepickerFileDescriptor;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import play.libs.ws.*;
 
 import java.util.stream.Stream;
@@ -52,10 +51,20 @@ public class ReportGeneratorActorProtocol {
     }
 
     public static class FileSaved {
-        public final String filename;
+        public final FilepickerFileDescriptor file;
 
-        public FileSaved(String filename) {
-            this.filename = filename;
+        public FileSaved(FilepickerFileDescriptor file) {
+            this.file = file;
+        }
+    }
+
+    public static class FileRemoved {
+        public FileRemoved() {
+        }
+    }
+
+    public static class FireBaseSaved {
+        public FireBaseSaved() {
         }
     }
 

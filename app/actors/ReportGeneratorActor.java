@@ -4,6 +4,7 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.pf.ReceiveBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.firebase.client.*;
 import com.firebase.security.token.TokenGenerator;
 import com.firebase.security.token.TokenOptions;
@@ -18,12 +19,14 @@ import scala.PartialFunction;
 import scala.concurrent.duration.Duration;
 import scala.runtime.BoxedUnit;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 public class ReportGeneratorActor extends AbstractActor {
 
@@ -33,6 +36,8 @@ public class ReportGeneratorActor extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private final DateFormat df = new SimpleDateFormat("d.MM hh:mm:ss");
+
+    private Firebase rootRef;
 
     public ReportGeneratorActor() {
         Scheduler scheduler = getContext().system().scheduler();
@@ -97,7 +102,7 @@ public class ReportGeneratorActor extends AbstractActor {
                                     .stream()
                                     .filter(i -> current.searchText(i.searchInPlan, new PositionInParagraph()) != null)
                                     .findFirst();
-                            if (currentIBodyElementOpt.isPresent()) {
+                            if (matchedmapperopt.isPresent()) {
                                 this.context().become(
                                         this.parsing_waitingForTable(parent,
                                                 document,
@@ -117,7 +122,7 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
-                    // todo
+                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -130,12 +135,12 @@ public class ReportGeneratorActor extends AbstractActor {
     final PartialFunction<Object, BoxedUnit> parsing_waitingForTable(
             final ActorRef parent,
             final Document document,
-            WSClient ws,
-            String firebaseSecret,
-            String filepickerSecret,
-            ImmutableList<TableMapping.TableCreator> creators,
-            ImmutableList<TableMapping> mappers,
-            TableMapping currentmapping) {
+            final WSClient ws,
+            final String firebaseSecret,
+            final String filepickerSecret,
+            final ImmutableList<TableMapping.TableCreator> creators,
+            final ImmutableList<TableMapping> mappers,
+            final TableMapping currentmapping) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
                     Optional<IBodyElement> currentIBodyElementOpt = msg.rest.findFirst();
@@ -143,7 +148,16 @@ public class ReportGeneratorActor extends AbstractActor {
                         IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
                         if (currentIBodyElement instanceof XWPFTable) {
                             XWPFTable current = (XWPFTable)currentIBodyElement;
-                            // todo
+                            this.context().become(
+                                    this.parsing_waitingForHeader(parent,
+                                            document,
+                                            ws,
+                                            firebaseSecret,
+                                            filepickerSecret,
+                                            new ImmutableList.Builder<TableMapping.TableCreator>().addAll(creators).add(currentmapping.map(current)).build(),
+                                            mappers
+                                    )
+                            );
                         }
                         this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(msg.rest.skip(1)), this.self());
                     } else {
@@ -151,7 +165,7 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
-                    // todo
+                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -161,8 +175,108 @@ public class ReportGeneratorActor extends AbstractActor {
                 }).build();
     }
 
+    final PartialFunction<Object, BoxedUnit> waitingForSaveFile(
+            final ActorRef parent,
+            final Document document,
+            final WSClient ws,
+            final String firebaseSecret,
+            final String filepickerSecret) {
+        return ReceiveBuilder
+                .match(ReportGeneratorActorProtocol.FileSaved.class, msg -> {
+                    ActorRef self_c = this.self();
+                    this.getContext().become(this.waitingForFirebaseSave(parent, document, ws, firebaseSecret, filepickerSecret, msg.file));
+                    rootRef.child("documents")
+                            .push()
+                            .setValue(new Document(document.getCategoryUid(), msg.file, false, msg.file.getFilename(), ""), new Firebase.CompletionListener() {
+                                @Override
+                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                    if (firebaseError != null) {
+                                        self_c.tell(new ReportGeneratorActorProtocol.FireBaseSaved(), self_c);
+                                    } else {
+                                        self_c.tell(new ReportGeneratorActorProtocol.RecievedError("firebase save error"), self_c);
+                                    }
+                                }
+                            });
+                })
+                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    this.processReceivedError(msg, parent);
+                })
+                .matchEquals("timeout", msg -> {
+                    this.terminateWithFailureResponse(parent, msg);
+                }).build();
+    }
+
+    final PartialFunction<Object, BoxedUnit> waitingForFirebaseSave(
+            final ActorRef parent,
+            final Document document,
+            final WSClient ws,
+            final String firebaseSecret,
+            final String filepickerSecret,
+            final FilepickerFileDescriptor file) {
+        return ReceiveBuilder
+                .match(ReportGeneratorActorProtocol.FireBaseSaved.class, msg -> {
+                    this.terminateWithSuccessResponse(parent);
+                })
+                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    this.removeFile(file.getUrl(), ws, filepickerSecret);
+                    this.processReceivedError(msg, parent);
+                })
+                .matchEquals("timeout", msg -> {
+                    //this.removeFile(file.getUrl(), ws, filepickerSecret);
+                    this.terminateWithFailureResponse(parent, msg);
+                }).build();
+    }
+
+    private void removeFile(String url, WSClient ws, String filepickerSecret) {
+        ws.url(url)
+                .setQueryParameter("key", filepickerSecret)
+                .delete();
+    }
+
+    private void processParsingEnded(final ActorRef parent,
+                                     final Document document,
+                                     final WSClient ws,
+                                     final String firebaseSecret,
+                                     final String filepickerSecret,
+                                     final ImmutableList<TableMapping.TableCreator> creators) {
+        try {
+            XWPFDocument docx = new XWPFDocument();
+            creators.forEach(c -> {
+                XWPFParagraph header = docx.createParagraph();
+                XWPFRun headerrun = header.createRun();
+                headerrun.setText(c.mapper.header);
+
+                c.create(docx);
+            });
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            docx.write(bos);
+            String body = Base64.getEncoder().encodeToString(bos.toByteArray());
+
+            ws.url("https://www.filepicker.io/api/store/S3")
+                    .setQueryParameter("base64decode", "true")
+                    .setQueryParameter("file", "Отчет " + df.format(new Date()) + ".txt")
+                    .setQueryParameter("key", filepickerSecret)
+                    .post(body)
+                    .thenAccept(json -> {
+                        String respbody = json.getBody();
+                        try {
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            FilepickerFileDescriptor filedescriptor = objectMapper.readValue(respbody, FilepickerFileDescriptor.class);
+                            this.self().tell(new ReportGeneratorActorProtocol.FileSaved(filedescriptor), this.self());
+                            this.getContext().become(this.waitingForSaveFile(parent, document, ws, firebaseSecret, filepickerSecret));
+                        } catch (Exception e) {
+                            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("cannot save file to filepicker"), this.self());
+                        }
+                    });
+        } catch (Exception e) {
+            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("doc creating error"), this.self());
+        }
+
+    }
+
     private void processGenerateReportXml(ReportGeneratorActorProtocol.GenerateReportlXml msg) {
-        Firebase rootRef = new Firebase(msg.firebaseUrl);
+        this.rootRef = new Firebase(msg.firebaseUrl);
         //rootRef.authWithCustomToken();
         final ActorRef self_c = this.self();
         rootRef.authWithCustomToken(this.getToken(msg.firebaseSecret), new Firebase.AuthResultHandler() {
@@ -223,7 +337,7 @@ public class ReportGeneratorActor extends AbstractActor {
             });
             getContext().become(this.waitingForFilepickerDocument(parent, msg.document, ws, firebaseSecret, filepickerSecret));
         } else {
-            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("bad filename"), this.self());
+            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("bad file"), this.self());
         }
     }
 
@@ -231,11 +345,12 @@ public class ReportGeneratorActor extends AbstractActor {
         if (msg.file.length < 1) {
             terminateWithFailureResponse(parent, "received 0 bytes from file storage");
         } else {
-            ws.url("https://www.filepicker.io/api/store/S3")
-                    .setQueryParameter("base64decode", "false")
-                    .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".txt")
-                    .setQueryParameter("key", filepickerSecret)
-                    .post("123456789");
+            ByteArrayInputStream bis = new ByteArrayInputStream(msg.file);
+            try {
+                XWPFDocument docx = new XWPFDocument(bis);
+            } catch (IOException e) {
+                this.self().tell(new ReportGeneratorActorProtocol.RecievedError("file parse as docx error"), this.self());
+            }
             this.terminateWithSuccessResponse(parent);
         }
     }

@@ -16,9 +16,16 @@ public class Document {
     private String name;
     private String templateUid;
 
-
     public Document() {
+    }
 
+    public Document(String categoryUid, FilepickerFileDescriptor fpfile, Boolean isTemplate, String name, String templateUid) {
+        this.categoryUid = categoryUid;
+        this.fpfile = fpfile;
+
+        this.isTemplate = isTemplate;
+        this.name = name;
+        this.templateUid = templateUid;
     }
 
     @JsonIgnore

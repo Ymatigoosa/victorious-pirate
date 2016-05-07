@@ -79,7 +79,7 @@ public class ApiController extends Controller {
             JournalXmlCreatorActorProtocol.JournalXmlCreated msg = (JournalXmlCreatorActorProtocol.JournalXmlCreated)response;
             return ok(msg.file)
                     .as("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    .withHeader("Content-Disposition", "attachment; filename=\""+getFilename(msg.courseName, msg.groupName) +"\"");
+                    .withHeader("Content-Disposition", "attachment; file=\""+getFilename(msg.courseName, msg.groupName) +"\"");
         } else if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlError ) {
             JournalXmlCreatorActorProtocol.JournalXmlError msg = (JournalXmlCreatorActorProtocol.JournalXmlError)response;
             return this.internalServerError("createXls returned an error");
