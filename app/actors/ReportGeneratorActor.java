@@ -73,7 +73,7 @@ public class ReportGeneratorActor extends AbstractActor {
     final PartialFunction<Object, BoxedUnit> waitingForFilepickerDocument(final ActorRef parent, final Document document, WSClient ws, String firebaseSecret, String filepickerSecret) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedFile.class, msg -> {
-                    this.processReceivedFile(msg, parent, ws, firebaseSecret, filepickerSecret);
+                    this.processReceivedFile(msg, parent, ws, firebaseSecret, filepickerSecret, document);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -341,13 +341,23 @@ public class ReportGeneratorActor extends AbstractActor {
         }
     }
 
-    private void processReceivedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret) {
+    private void processReceivedFile(ReportGeneratorActorProtocol.RecievedFile msg, ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret, Document document) {
         if (msg.file.length < 1) {
             terminateWithFailureResponse(parent, "received 0 bytes from file storage");
         } else {
             ByteArrayInputStream bis = new ByteArrayInputStream(msg.file);
             try {
                 XWPFDocument docx = new XWPFDocument(bis);
+                docx.getBodyElements();
+                this.getContext().become(this.parsing_waitingForHeader(
+                        parent,
+                        document,
+                        ws,
+                        firebaseSecret,
+                        filepickerSecret,
+                        new ImmutableList.Builder<TableMapping.TableCreator>().build(),
+                        this.getMappings())
+                );
             } catch (IOException e) {
                 this.self().tell(new ReportGeneratorActorProtocol.RecievedError("file parse as docx error"), this.self());
             }
