@@ -27,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class ReportGeneratorActor extends AbstractActor {
 
@@ -93,7 +95,7 @@ public class ReportGeneratorActor extends AbstractActor {
             ImmutableList<TableMapping> mappers) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
-                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.findFirst();
+                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
                     if (currentIBodyElementOpt.isPresent()) {
                         IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
                         if (currentIBodyElement instanceof XWPFParagraph ) {
@@ -116,7 +118,7 @@ public class ReportGeneratorActor extends AbstractActor {
                                 );
                             }
                         }
-                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(msg.rest.skip(1)), this.self());
+                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(new ImmutableList.Builder<IBodyElement>().addAll(msg.rest.stream().skip(1).collect(Collectors.toList())).build()), this.self());
                     } else {
                         this.self().tell(new ReportGeneratorActorProtocol.ParsingEnded(), this.self());
                     }
@@ -143,7 +145,7 @@ public class ReportGeneratorActor extends AbstractActor {
             final TableMapping currentmapping) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
-                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.findFirst();
+                    Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
                     if (currentIBodyElementOpt.isPresent()) {
                         IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
                         if (currentIBodyElement instanceof XWPFTable) {
@@ -159,7 +161,7 @@ public class ReportGeneratorActor extends AbstractActor {
                                     )
                             );
                         }
-                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(msg.rest.skip(1)), this.self());
+                        this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(new ImmutableList.Builder<IBodyElement>().addAll(msg.rest.stream().skip(1).collect(Collectors.toList())).build()), this.self());
                     } else {
                         this.self().tell(new ReportGeneratorActorProtocol.ParsingEnded(), this.self());
                     }
@@ -190,7 +192,7 @@ public class ReportGeneratorActor extends AbstractActor {
                             .setValue(new Document(document.getCategoryUid(), msg.file, false, msg.file.getFilename(), ""), new Firebase.CompletionListener() {
                                 @Override
                                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError != null) {
+                                    if (firebaseError == null) {
                                         self_c.tell(new ReportGeneratorActorProtocol.FireBaseSaved(), self_c);
                                     } else {
                                         self_c.tell(new ReportGeneratorActorProtocol.RecievedError("firebase save error"), self_c);
@@ -253,22 +255,23 @@ public class ReportGeneratorActor extends AbstractActor {
             docx.write(bos);
             String body = Base64.getEncoder().encodeToString(bos.toByteArray());
 
-            ws.url("https://www.filepicker.io/api/store/S3")
+            WSRequest req = ws.url("https://www.filepicker.io/api/store/S3")
                     .setQueryParameter("base64decode", "true")
-                    .setQueryParameter("file", "Отчет " + df.format(new Date()) + ".txt")
-                    .setQueryParameter("key", filepickerSecret)
-                    .post(body)
-                    .thenAccept(json -> {
-                        String respbody = json.getBody();
-                        try {
-                            ObjectMapper objectMapper = new ObjectMapper();
-                            FilepickerFileDescriptor filedescriptor = objectMapper.readValue(respbody, FilepickerFileDescriptor.class);
-                            this.self().tell(new ReportGeneratorActorProtocol.FileSaved(filedescriptor), this.self());
-                            this.getContext().become(this.waitingForSaveFile(parent, document, ws, firebaseSecret, filepickerSecret));
-                        } catch (Exception e) {
-                            this.self().tell(new ReportGeneratorActorProtocol.RecievedError("cannot save file to filepicker"), this.self());
-                        }
-                    });
+                    .setQueryParameter("mimetype", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".docx")
+                    .setQueryParameter("key", filepickerSecret);
+            this.getContext().become(this.waitingForSaveFile(parent, document, ws, firebaseSecret, filepickerSecret));
+            req.post(body)
+                .thenAccept(json -> {
+                    String respbody = json.getBody();
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        FilepickerFileDescriptor filedescriptor = objectMapper.readValue(respbody, FilepickerFileDescriptor.class);
+                        this.self().tell(new ReportGeneratorActorProtocol.FileSaved(filedescriptor), this.self());
+                    } catch (Exception e) {
+                        this.self().tell(new ReportGeneratorActorProtocol.RecievedError("cannot save file to filepicker"), this.self());
+                    }
+                });
         } catch (Exception e) {
             this.self().tell(new ReportGeneratorActorProtocol.RecievedError("doc creating error"), this.self());
         }
@@ -348,7 +351,10 @@ public class ReportGeneratorActor extends AbstractActor {
             ByteArrayInputStream bis = new ByteArrayInputStream(msg.file);
             try {
                 XWPFDocument docx = new XWPFDocument(bis);
-                this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(docx.getBodyElements().stream()), this.self());
+                ImmutableList<IBodyElement> stream = new ImmutableList.Builder<IBodyElement>()
+                        .addAll(docx.getBodyElements())
+                        .build();
+                this.self().tell(new ReportGeneratorActorProtocol.ParagraphFinded(stream), this.self());
                 this.getContext().become(this.parsing_waitingForHeader(
                         parent,
                         document,
@@ -358,10 +364,10 @@ public class ReportGeneratorActor extends AbstractActor {
                         new ImmutableList.Builder<TableMapping.TableCreator>().build(),
                         this.getMappings())
                 );
-            } catch (IOException e) {
+            } catch (Exception e) {
                 this.self().tell(new ReportGeneratorActorProtocol.RecievedError("file parse as docx error"), this.self());
             }
-            this.terminateWithSuccessResponse(parent);
+            //this.terminateWithSuccessResponse(parent);
         }
     }
 

@@ -1,5 +1,6 @@
 package actors;
 
+import com.google.common.collect.ImmutableList;
 import models.Document;
 import models.FilepickerFileDescriptor;
 import org.apache.poi.xwpf.usermodel.IBodyElement;
@@ -86,9 +87,9 @@ public class ReportGeneratorActorProtocol {
     //XWPFParagraph
     public static class ParagraphFinded {
 
-        public final Stream<IBodyElement> rest;
+        public final ImmutableList<IBodyElement> rest;
 
-        public ParagraphFinded(Stream<IBodyElement> rest) {
+        public ParagraphFinded(ImmutableList<IBodyElement> rest) {
             this.rest = rest;
         }
     }
