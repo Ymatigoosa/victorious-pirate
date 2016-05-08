@@ -65,12 +65,16 @@ public class ApiController extends Controller {
                 .thenApply(response -> sendReportResponse(response));
     }
 
-    private String getFilename(String courseName, String groupName) {
+    private String getJournalXlsxFilename(String courseName, String groupName) {
         String raw = courseName + " "+ groupName + ".xlsx";
+        return getFilename(raw, "journal.xlsx");
+    }
+
+    private String getFilename(String filename, String defaultasciiname) {
         try {
-            return URLEncoder.encode(raw, "UTF-8").replace("+", "%20");
+            return URLEncoder.encode(filename, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
-            return "journal.xlsx";
+            return defaultasciiname;
         }
     }
 
@@ -79,7 +83,7 @@ public class ApiController extends Controller {
             JournalXmlCreatorActorProtocol.JournalXmlCreated msg = (JournalXmlCreatorActorProtocol.JournalXmlCreated)response;
             return ok(msg.file)
                     .as("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    .withHeader("Content-Disposition", "attachment; file=\""+getFilename(msg.courseName, msg.groupName) +"\"");
+                    .withHeader("Content-Disposition", "attachment; filename=\""+ getJournalXlsxFilename(msg.courseName, msg.groupName) +"\"");
         } else if (response instanceof JournalXmlCreatorActorProtocol.JournalXmlError ) {
             JournalXmlCreatorActorProtocol.JournalXmlError msg = (JournalXmlCreatorActorProtocol.JournalXmlError)response;
             return this.internalServerError("createXls returned an error");
@@ -89,8 +93,10 @@ public class ApiController extends Controller {
 
     private Result sendReportResponse(Object response) {
         if (response instanceof ReportGeneratorActorProtocol.GenerationSucceeded ) {
-            //ReportGeneratorActorProtocol.GenerationSucceeded msg = (ReportGeneratorActorProtocol.GenerationSucceeded)response;
-            return ok("good");
+            ReportGeneratorActorProtocol.GenerationSucceeded msg = (ReportGeneratorActorProtocol.GenerationSucceeded)response;
+            return ok(msg.body)
+                    .as("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .withHeader("Content-Disposition", "attachment; filename=\""+ getFilename(msg.filename, "report.docx") +"\"");
         } else if (response instanceof ReportGeneratorActorProtocol.GenerationFailure ) {
             ReportGeneratorActorProtocol.GenerationFailure msg = (ReportGeneratorActorProtocol.GenerationFailure)response;
             return this.internalServerError(msg.error);

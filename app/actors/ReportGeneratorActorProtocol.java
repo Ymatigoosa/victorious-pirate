@@ -71,7 +71,13 @@ public class ReportGeneratorActorProtocol {
 
     public static class GenerationSucceeded {
 
-        public GenerationSucceeded() {
+        public final byte[] body;
+
+        public final String filename;
+
+        public GenerationSucceeded(byte[] body, String filename) {
+            this.body = body;
+            this.filename = filename;
         }
     }
 

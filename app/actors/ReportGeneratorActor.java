@@ -37,7 +37,7 @@ public class ReportGeneratorActor extends AbstractActor {
     }
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    private final DateFormat df = new SimpleDateFormat("d.MM hh:mm:ss");
+    private final DateFormat df = new SimpleDateFormat("d.MM hh-mm-ss");
 
     private Firebase rootRef;
 
@@ -177,64 +177,64 @@ public class ReportGeneratorActor extends AbstractActor {
                 }).build();
     }
 
-    final PartialFunction<Object, BoxedUnit> waitingForSaveFile(
-            final ActorRef parent,
-            final Document document,
-            final WSClient ws,
-            final String firebaseSecret,
-            final String filepickerSecret) {
-        return ReceiveBuilder
-                .match(ReportGeneratorActorProtocol.FileSaved.class, msg -> {
-                    ActorRef self_c = this.self();
-                    this.getContext().become(this.waitingForFirebaseSave(parent, document, ws, firebaseSecret, filepickerSecret, msg.file));
-                    rootRef.child("documents")
-                            .push()
-                            .setValue(new Document(document.getCategoryUid(), msg.file, false, msg.file.getFilename(), ""), new Firebase.CompletionListener() {
-                                @Override
-                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError == null) {
-                                        self_c.tell(new ReportGeneratorActorProtocol.FireBaseSaved(), self_c);
-                                    } else {
-                                        self_c.tell(new ReportGeneratorActorProtocol.RecievedError("firebase save error"), self_c);
-                                    }
-                                }
-                            });
-                })
-                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
-                    this.processReceivedError(msg, parent);
-                })
-                .matchEquals("timeout", msg -> {
-                    this.terminateWithFailureResponse(parent, msg);
-                }).build();
-    }
+//    final PartialFunction<Object, BoxedUnit> waitingForSaveFile(
+//            final ActorRef parent,
+//            final Document document,
+//            final WSClient ws,
+//            final String firebaseSecret,
+//            final String filepickerSecret) {
+//        return ReceiveBuilder
+//                .match(ReportGeneratorActorProtocol.FileSaved.class, msg -> {
+//                    ActorRef self_c = this.self();
+//                    this.getContext().become(this.waitingForFirebaseSave(parent, document, ws, firebaseSecret, filepickerSecret, msg.file));
+//                    rootRef.child("documents")
+//                            .push()
+//                            .setValue(new Document(document.getCategoryUid(), msg.file, false, msg.file.getFilename(), ""), new Firebase.CompletionListener() {
+//                                @Override
+//                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+//                                    if (firebaseError == null) {
+//                                        self_c.tell(new ReportGeneratorActorProtocol.FireBaseSaved(), self_c);
+//                                    } else {
+//                                        self_c.tell(new ReportGeneratorActorProtocol.RecievedError("firebase save error"), self_c);
+//                                    }
+//                                }
+//                            });
+//                })
+//                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+//                    this.processReceivedError(msg, parent);
+//                })
+//                .matchEquals("timeout", msg -> {
+//                    this.terminateWithFailureResponse(parent, msg);
+//                }).build();
+//    }
+//
+//    final PartialFunction<Object, BoxedUnit> waitingForFirebaseSave(
+//            final ActorRef parent,
+//            final Document document,
+//            final WSClient ws,
+//            final String firebaseSecret,
+//            final String filepickerSecret,
+//            final FilepickerFileDescriptor file) {
+//        return ReceiveBuilder
+//                .match(ReportGeneratorActorProtocol.FireBaseSaved.class, msg -> {
+//                    this.terminateWithSuccessResponse(parent);
+//                })
+//                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+//                    this.removeFile(file.getUrl(), ws, filepickerSecret);
+//                    this.processReceivedError(msg, parent);
+//                })
+//                .matchEquals("timeout", msg -> {
+//                    //this.removeFile(file.getUrl(), ws, filepickerSecret);
+//                    this.terminateWithFailureResponse(parent, msg);
+//                }).build();
+//    }
 
-    final PartialFunction<Object, BoxedUnit> waitingForFirebaseSave(
-            final ActorRef parent,
-            final Document document,
-            final WSClient ws,
-            final String firebaseSecret,
-            final String filepickerSecret,
-            final FilepickerFileDescriptor file) {
-        return ReceiveBuilder
-                .match(ReportGeneratorActorProtocol.FireBaseSaved.class, msg -> {
-                    this.terminateWithSuccessResponse(parent);
-                })
-                .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
-                    this.removeFile(file.getUrl(), ws, filepickerSecret);
-                    this.processReceivedError(msg, parent);
-                })
-                .matchEquals("timeout", msg -> {
-                    //this.removeFile(file.getUrl(), ws, filepickerSecret);
-                    this.terminateWithFailureResponse(parent, msg);
-                }).build();
-    }
-
-    private void removeFile(String url, WSClient ws, String filepickerSecret) {
-        ws.url(url)
-                .setQueryParameter("key", filepickerSecret)
-                .delete();
-    }
-
+//    private void removeFile(String url, WSClient ws, String filepickerSecret) {
+//        ws.url(url)
+//                .setQueryParameter("key", filepickerSecret)
+//                .delete();
+//    }
+//
     private void processParsingEnded(final ActorRef parent,
                                      final Document document,
                                      final WSClient ws,
@@ -253,25 +253,27 @@ public class ReportGeneratorActor extends AbstractActor {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             docx.write(bos);
-            String body = Base64.getEncoder().encodeToString(bos.toByteArray());
+            String filename = "Отчет " + df.format(new Date()) + ".docx";
+            this.terminateWithSuccessResponse(parent, bos.toByteArray(), filename);
+//            String body = Base64.getEncoder().encodeToString(bos.toByteArray());
 
-            WSRequest req = ws.url("https://www.filepicker.io/api/store/S3")
-                    .setQueryParameter("base64decode", "true")
-                    .setQueryParameter("mimetype", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-                    .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".docx")
-                    .setQueryParameter("key", filepickerSecret);
-            this.getContext().become(this.waitingForSaveFile(parent, document, ws, firebaseSecret, filepickerSecret));
-            req.post(body)
-                .thenAccept(json -> {
-                    String respbody = json.getBody();
-                    try {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        FilepickerFileDescriptor filedescriptor = objectMapper.readValue(respbody, FilepickerFileDescriptor.class);
-                        this.self().tell(new ReportGeneratorActorProtocol.FileSaved(filedescriptor), this.self());
-                    } catch (Exception e) {
-                        this.self().tell(new ReportGeneratorActorProtocol.RecievedError("cannot save file to filepicker"), this.self());
-                    }
-                });
+//            WSRequest req = ws.url("https://www.filepicker.io/api/store/S3")
+//                    .setQueryParameter("base64decode", "true")
+//                    .setQueryParameter("mimetype", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+//                    .setQueryParameter("filename", "Отчет " + df.format(new Date()) + ".docx")
+//                    .setQueryParameter("key", filepickerSecret);
+//            this.getContext().become(this.waitingForSaveFile(parent, document, ws, firebaseSecret, filepickerSecret));
+//            req.post(body)
+//                .thenAccept(json -> {
+//                    String respbody = json.getBody();
+//                    try {
+//                        ObjectMapper objectMapper = new ObjectMapper();
+//                        FilepickerFileDescriptor filedescriptor = objectMapper.readValue(respbody, FilepickerFileDescriptor.class);
+//                        this.self().tell(new ReportGeneratorActorProtocol.FileSaved(filedescriptor), this.self());
+//                    } catch (Exception e) {
+//                        this.self().tell(new ReportGeneratorActorProtocol.RecievedError("cannot save file to filepicker"), this.self());
+//                    }
+//                });
         } catch (Exception e) {
             this.self().tell(new ReportGeneratorActorProtocol.RecievedError("doc creating error"), this.self());
         }
@@ -371,8 +373,8 @@ public class ReportGeneratorActor extends AbstractActor {
         }
     }
 
-    private void terminateWithSuccessResponse(ActorRef parent) {
-        parent.tell(new ReportGeneratorActorProtocol.GenerationSucceeded(), this.self());
+    private void terminateWithSuccessResponse(ActorRef parent, byte[] body, String filename) {
+        parent.tell(new ReportGeneratorActorProtocol.GenerationSucceeded(body, filename), this.self());
         this.getContext().stop(this.self());
     }
 
