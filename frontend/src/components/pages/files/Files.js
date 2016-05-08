@@ -259,7 +259,7 @@ class Files extends React.Component {
             ? <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
             : null
           }
-          {item.name.toLowerCase().indexOf('план') >= 0
+          {item.name.toLowerCase().indexOf('план') >= 0 || item.name.toLowerCase().indexOf('plan') >= 0
             ? <MenuItem onTouchTap={this.generateReport.bind(this, item)}>Сгенерировать отчет</MenuItem>
             : null
           }
