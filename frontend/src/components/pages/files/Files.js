@@ -220,20 +220,28 @@ class Files extends React.Component {
       alert('Файл не найден!\nВозможно был использован шаблон, который удален');
       return;
     }
-    fetch(`/api/generatePlanReport/${targetfile['.key']}`).then((response) => {
-      if (response.ok) {
-        return response;
-      } else {
-        var error = new Error(response.statusText);
-        error.response = response;
-        throw error;
-      }
-    }).then(() => {
-      this.props.actions.setSnackbarState({text: 'Отчет сгенерирован', isOpen: true});
-    }).catch((ex) => {
-      console.error('generatePlanReport failed', ex);
-      this.props.actions.setSnackbarState({text: 'Ошибка при формировании отчета', isOpen: true});
-    });
+
+    if (targetfile.fpfile.mimetype !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      alert('Поддерживается генерация только для *.docx файлов');
+      return;
+    }
+    var url = `/api/generateReport/${targetfile['.key']}`;
+    var win = window.open(url, '_blank');
+    win.focus();
+    //fetch(`/api/generatePlanReport/${targetfile['.key']}`).then((response) => {
+    //  if (response.ok) {
+    //    return response;
+    //  } else {
+    //    var error = new Error(response.statusText);
+    //    error.response = response;
+    //    throw error;
+    //  }
+    //}).then(() => {
+    //  this.props.actions.setSnackbarState({text: 'Отчет сгенерирован', isOpen: true});
+    //}).catch((ex) => {
+    //  console.error('generatePlanReport failed', ex);
+    //  this.props.actions.setSnackbarState({text: 'Ошибка при формировании отчета', isOpen: true});
+    //});
   }
 
   render_item(item) {
@@ -249,6 +257,10 @@ class Files extends React.Component {
           <MenuItem onTouchTap={this.openDialogEdit.bind(this, item)}>Редактировать</MenuItem>
           {!item.isTemplate
             ? <MenuItem onTouchTap={this.openDialogEditTemplate.bind(this, item)}>Установить шаблон</MenuItem>
+            : null
+          }
+          {!item.name.toLowerCase().indexOf('план') !== 0
+            ? <MenuItem onTouchTap={this.generateReport.bind(this, item)}>Сгенерировать отчет</MenuItem>
             : null
           }
           <MenuItem onTouchTap={this.onDownload.bind(this, item)}>Скачать</MenuItem>

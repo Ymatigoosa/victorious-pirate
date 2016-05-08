@@ -369,7 +369,7 @@ class Journal extends React.Component {
             <RaisedButton icon={<AddCircleIcon />} label='Добавить студента' onMouseUp={this.onStudentDialogOpenCreate.bind(this)} />
             <RaisedButton icon={<AddCircleIcon />} label='Добавить занятие' onMouseUp={this.onDateDialogOpenCreate.bind(this)} />
             </ToggleDisplay>
-            <RaisedButton icon={<FileDownload />} label='Скачать' linkButton={true} href={`/api/journal-xml/${this.props.params.academicTermUid}/${this.props.params.courseUid}/${this.props.params.studentGroupUid}`} />
+            <RaisedButton icon={<FileDownload />} label='Скачать' linkButton={true} target="_blank" href={`/api/journal-xml/${this.props.params.academicTermUid}/${this.props.params.courseUid}/${this.props.params.studentGroupUid}`} />
           </div>
         </div>
         {<JournalTable
