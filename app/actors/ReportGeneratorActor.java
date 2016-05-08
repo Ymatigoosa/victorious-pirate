@@ -255,6 +255,10 @@ public class ReportGeneratorActor extends AbstractActor {
             newStyles.setStyles(olddocx.getStyle());
 
             creators.forEach(c -> {
+                XWPFParagraph emptyline = docx.createParagraph();
+                XWPFRun emptylinerun = emptyline.createRun();
+                emptylinerun.setText("");
+
                 XWPFParagraph header = docx.createParagraph();
                 XWPFRun headerrun = header.createRun();
                 headerrun.setText(c.mapper.header);
@@ -466,13 +470,13 @@ public class ReportGeneratorActor extends AbstractActor {
                     tableHeader(tableRowOne.addNewTableCell(), "Рассмотренные вопросы");
                     tableHeader(tableRowOne.addNewTableCell(), "Докладчики");
 
-                    //create second row
-                    XWPFTableRow tableRowTwo = newtable.createRow();
-                    tableHeader(tableRowTwo.getCell(0), "1");
-                    tableHeader(tableRowTwo.getCell(1), "2");
-                    tableHeader(tableRowTwo.getCell(2), "3");
-                    tableHeader(tableRowTwo.getCell(3), "4");
-                    tableHeader(tableRowTwo.getCell(4), "5");
+//                    //create second row
+//                    XWPFTableRow tableRowTwo = newtable.createRow();
+//                    tableHeader(tableRowTwo.getCell(0), "1");
+//                    tableHeader(tableRowTwo.getCell(1), "2");
+//                    tableHeader(tableRowTwo.getCell(2), "3");
+//                    tableHeader(tableRowTwo.getCell(3), "4");
+//                    tableHeader(tableRowTwo.getCell(4), "5");
 
                     for (int i = 1; i<rows.size(); ++i) {
                         XWPFTableRow currentrow = table.getRow(i);
@@ -486,6 +490,39 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 }
         ));
+
+        // Таблица 3 –План проведения открытых лекций	Таблица 2 – Сведения о проведенных открытых лекциях
+        result.add(new TableMapping(
+                1,
+                "Таблица 3",
+                "Таблица 2 – Сведения о проведенных открытых лекциях",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "Ф.И.О. \n" +
+                            "преподавателя");
+                    tableHeader(tableRowOne.addNewTableCell(), "Тема лекции");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата проведения");
+                    tableHeader(tableRowOne.addNewTableCell(), "Ф.И.О. преподавателей\n" +
+                            "посетивших лекцию");
+                    tableHeader(tableRowOne.addNewTableCell(), "Краткий отзыв");
+
+                    for (int i = 1; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        newrow.getCell(3).setText("");
+                        newrow.getCell(4).setText("");
+                    }
+                }
+        ));
+
+
         return new ImmutableList.Builder<TableMapping>()
                 .addAll(result)
                 .build();
