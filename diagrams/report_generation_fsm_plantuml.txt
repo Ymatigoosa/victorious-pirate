@@ -1,0 +1,33 @@
+@startuml
+
+state "Начальное состояние" as start
+state "Ожидание данных из бд" as waitingForDatabase : entry/ Запрос данных из бд
+state "Ожидание файла из хранилища" as waitingForFileStore : entry/ Запрос данных из хранилища\nфайлов
+state "Начало парсинга" as parsingStart : entry/ Разбор принятого файла
+state "Ожидание заголовка" as parsingWaitingForHeader : entry/ Перейти к следующему\nэлементу документа
+state "Ожидание таблицы" as parsingWaitingForTable : entry/ Перейти к следующему\nэлементу документа\nend/ Запомнить\nнайденную таблицу
+state "Конец парсинга" as parsingEnd : entry/ Сгенерировать документ
+state "Завершено успешно" as success : entry/ Отправить клиенту\nсгенерированный документ
+state "Завершено с ошибкой" as failure : entry/ Отправить клиенту ошибку
+
+[*] -[#green]-> start
+start -[#green]-> waitingForDatabase : Принят запрос\nо генерации отчета
+waitingForDatabase -[#green]-> waitingForFileStore : Получен ответ\nот бд
+waitingForFileStore -[#green]-> parsingStart : Файл принят
+parsingStart -[#green]-> parsingWaitingForHeader : Не найден заколовок
+parsingStart -[#green]-> parsingWaitingForTable : Найден заколовок
+parsingWaitingForHeader -[#green]-> parsingWaitingForTable : Найден заколовок
+parsingWaitingForHeader -[#green]-> parsingWaitingForHeader : Не найден заколовок
+parsingWaitingForTable -[#green]-> parsingWaitingForHeader : Найдена таблица
+parsingWaitingForTable -[#green]-> parsingWaitingForTable : Не найдена таблица
+parsingWaitingForHeader -[#green]-> parsingEnd : Конец файла
+parsingWaitingForTable -[#green]-> parsingEnd : Конец файла
+parsingEnd -[#green]-> success : Документ сгенерирован
+success -[#green]-> [*]
+
+waitingForDatabase -[#red]-> failure : Ошибка бд
+waitingForFileStore -[#red]-> failure : Файл отсуствует
+parsingStart -[#red]-> failure : Неверный формат файла
+failure -[#red]-> [*]
+
+@enduml
