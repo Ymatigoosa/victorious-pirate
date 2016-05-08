@@ -39,7 +39,7 @@ public class ReportGeneratorActor extends AbstractActor {
     }
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    private final DateFormat df = new SimpleDateFormat("d.MM hh-mm-ss");
+    private final DateFormat df = new SimpleDateFormat("d.MM HH-mm-ss");
 
     private Firebase rootRef;
 
@@ -439,6 +439,8 @@ public class ReportGeneratorActor extends AbstractActor {
 
             public void create(XWPFDocument document) {
                 XWPFTable newtable = document.createTable();
+
+                // auto adjust table size
                 CTTbl cttbl        = newtable.getCTTbl();
                 CTTblPr pr         = cttbl.getTblPr();
                 CTTblWidth tblW = pr.getTblW();
@@ -446,9 +448,26 @@ public class ReportGeneratorActor extends AbstractActor {
                 tblW.setType(STTblWidth.PCT);
                 pr.setTblW(tblW);
                 cttbl.setTblPr(pr);
+
+                // borders
+                CTTblBorders borders = pr.addNewTblBorders();
+                setupTableBorder(borders.addNewBottom());
+                setupTableBorder(borders.addNewInsideH());
+                setupTableBorder(borders.addNewInsideV());
+                setupTableBorder(borders.addNewLeft());
+                setupTableBorder(borders.addNewRight());
+                setupTableBorder(borders.addNewTop());
+
                 mapper._map.accept(this.table, newtable);
             }
         }
+
+    }
+
+    private static void setupTableBorder(CTBorder border) {
+        border.setVal(STBorder.SINGLE);
+        border.setColor("000000");
+        border.setSz(BigInteger.valueOf(2));
     }
 
     private ImmutableList<TableMapping> getMappings() {
