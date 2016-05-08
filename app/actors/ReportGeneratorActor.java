@@ -470,15 +470,15 @@ public class ReportGeneratorActor extends AbstractActor {
                     tableHeader(tableRowOne.addNewTableCell(), "Рассмотренные вопросы");
                     tableHeader(tableRowOne.addNewTableCell(), "Докладчики");
 
-//                    //create second row
-//                    XWPFTableRow tableRowTwo = newtable.createRow();
-//                    tableHeader(tableRowTwo.getCell(0), "1");
-//                    tableHeader(tableRowTwo.getCell(1), "2");
-//                    tableHeader(tableRowTwo.getCell(2), "3");
-//                    tableHeader(tableRowTwo.getCell(3), "4");
-//                    tableHeader(tableRowTwo.getCell(4), "5");
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
 
-                    for (int i = 1; i<rows.size(); ++i) {
+                    for (int i = 2; i<rows.size(); ++i) {
                         XWPFTableRow currentrow = table.getRow(i);
                         XWPFTableRow newrow = newtable.createRow();
 
@@ -501,15 +501,21 @@ public class ReportGeneratorActor extends AbstractActor {
 
                     // создаем первую строку
                     XWPFTableRow tableRowOne = newtable.getRow(0);
-                    tableHeader(tableRowOne.getCell(0), "Ф.И.О. \n" +
-                            "преподавателя");
+                    tableHeader(tableRowOne.getCell(0), "Ф.И.О. преподавателя");
                     tableHeader(tableRowOne.addNewTableCell(), "Тема лекции");
                     tableHeader(tableRowOne.addNewTableCell(), "Дата проведения");
-                    tableHeader(tableRowOne.addNewTableCell(), "Ф.И.О. преподавателей\n" +
-                            "посетивших лекцию");
+                    tableHeader(tableRowOne.addNewTableCell(), "Ф.И.О. преподавателей посетивших лекцию");
                     tableHeader(tableRowOne.addNewTableCell(), "Краткий отзыв");
 
-                    for (int i = 1; i<rows.size(); ++i) {
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
+
+                    for (int i = 2; i<rows.size(); ++i) {
                         XWPFTableRow currentrow = table.getRow(i);
                         XWPFTableRow newrow = newtable.createRow();
 
@@ -522,6 +528,127 @@ public class ReportGeneratorActor extends AbstractActor {
                 }
         ));
 
+        // Таблица 4 – План подготовки учебной и учебно-методической литературы	Таблица 3– Сведения об издании учебно-методической литературы
+        result.add(new TableMapping(
+                1,
+                "Таблица 4",
+                "Таблица 3 – Сведения об издании учебно-методической литературы",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "Наименование разработки");
+                    tableHeader(tableRowOne.addNewTableCell(), "Вид разработки (учебник, уч. пособие, мет. указание)");
+                    tableHeader(tableRowOne.addNewTableCell(), "Автор(ы) разработки");
+                    tableHeader(tableRowOne.addNewTableCell(), "Издательство, год издания"
+                    );
+                    tableHeader(tableRowOne.addNewTableCell(), "Объем, п.л."
+                    );
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 1, newrow, 0);
+                        newrow.getCell(1).setText("");
+                        moveText(currentrow, 2, newrow, 2);
+                        newrow.getCell(3).setText("");
+                        moveText(currentrow, 3, newrow, 4);
+                    }
+                }
+        ));
+
+        // Таблица 5 – План разработки учебно-методических комплексов дисциплин (ЭУМКД)* 	Таблица 5 – Сведения о разработанных и размещенных в файловом хранилище ЭУМКД по дисциплинам, закрепленным за кафедрой
+        result.add(new TableMapping(
+                1,
+                "Таблица 5",
+                "Таблица 5 – Сведения о разработанных и размещенных в файловом хранилище ЭУМКД по дисциплинам, закрепленным за кафедрой",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "№ п/п");
+                    tableHeader(tableRowOne.addNewTableCell(), "Код ОКСО (с кодом квалификации)");
+                    tableHeader(tableRowOne.addNewTableCell(), "Наименование образовательной программы");
+                    tableHeader(tableRowOne.addNewTableCell(), "Наименование дисциплины по учебному плану");
+                    tableHeader(tableRowOne.addNewTableCell(), "Курс и факультет, для которых разработан ЭУМКД");
+                    tableHeader(tableRowOne.addNewTableCell(), "Разработчики");
+                    tableHeader(tableRowOne.addNewTableCell(), "Размещение в файловом хранилище университета");
+                    tableHeader(tableRowOne.addNewTableCell(), "Общее число дисциплин, читаемых кафедрой/из них, размещенных в файловом хранилище");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
+                    tableHeader(tableRowTwo.getCell(5), "6");
+                    tableHeader(tableRowTwo.getCell(6), "7");
+                    tableHeader(tableRowTwo.getCell(7), "8");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        newrow.getCell(1).setText("");
+                        moveText(currentrow, 1, newrow, 2);
+                        moveText(currentrow, 2, newrow, 3);
+                        moveText(currentrow, 3, newrow, 4);
+                        moveText(currentrow, 4, newrow, 5);
+                        newrow.getCell(6).setText("");
+                        newrow.getCell(7).setText("");
+                    }
+                }
+        ));
+
+        // Таблица 7 - План проведения внутривузовских олимпиад и конкурсов ВКР	Таблица 9 – Сведения об участии студентов во внутривузовских олимпиадах и конкурсах ВКР
+        result.add(new TableMapping(
+                1,
+                "Таблица 7",
+                "Таблица 9 – Сведения об участии студентов во внутривузовских олимпиадах и конкурсах ВКР",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "Наименование олимпиады, конкурса, проведенных кафедрой");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата проведения");
+                    tableHeader(tableRowOne.addNewTableCell(), "Число студентов, принявших участие в олимпиаде, конкурсе");
+                    tableHeader(tableRowOne.addNewTableCell(), "Ответственный по кафедре за проведение олимпиады");
+                    tableHeader(tableRowOne.addNewTableCell(), "Результаты участия (список победителей и занятые места)");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        newrow.getCell(2).setText("");
+                        moveText(currentrow, 2, newrow, 3);
+                        newrow.getCell(4).setText("");
+                    }
+                }
+        ));
 
         return new ImmutableList.Builder<TableMapping>()
                 .addAll(result)
