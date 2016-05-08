@@ -28,6 +28,7 @@ success -[#green]-> [*]
 waitingForDatabase -[#red]-> failure : Ошибка бд
 waitingForFileStore -[#red]-> failure : Файл отсуствует
 parsingStart -[#red]-> failure : Неверный формат файла
+parsingEnd -[#red]-> failure : Ошибка генерирации
 failure -[#red]-> [*]
 
 @enduml
