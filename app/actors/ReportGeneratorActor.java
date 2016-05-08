@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import models.*;
 import models.Document;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 import play.libs.ws.WSRequest;
 import play.libs.ws.WSClient;
 import play.libs.ws.WSResponse;
@@ -22,6 +23,7 @@ import scala.runtime.BoxedUnit;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -92,7 +94,8 @@ public class ReportGeneratorActor extends AbstractActor {
             String firebaseSecret,
             String filepickerSecret,
             ImmutableList<TableMapping.TableCreator> creators,
-            ImmutableList<TableMapping> mappers) {
+            ImmutableList<TableMapping> mappers,
+            XWPFDocument docx) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
                     Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
@@ -113,7 +116,8 @@ public class ReportGeneratorActor extends AbstractActor {
                                                 filepickerSecret,
                                                 creators,
                                                 mappers,
-                                                matchedmapperopt.get()
+                                                matchedmapperopt.get(),
+                                                docx
                                         )
                                 );
                             }
@@ -124,7 +128,7 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
-                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators);
+                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators, docx);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -142,7 +146,8 @@ public class ReportGeneratorActor extends AbstractActor {
             final String filepickerSecret,
             final ImmutableList<TableMapping.TableCreator> creators,
             final ImmutableList<TableMapping> mappers,
-            final TableMapping currentmapping) {
+            final TableMapping currentmapping,
+            XWPFDocument docx) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
                     Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
@@ -157,7 +162,8 @@ public class ReportGeneratorActor extends AbstractActor {
                                             firebaseSecret,
                                             filepickerSecret,
                                             new ImmutableList.Builder<TableMapping.TableCreator>().addAll(creators).add(currentmapping.map(current)).build(),
-                                            mappers
+                                            mappers,
+                                            docx
                                     )
                             );
                         }
@@ -167,7 +173,7 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
-                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators);
+                    this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators, docx);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
                     this.processReceivedError(msg, parent);
@@ -240,9 +246,14 @@ public class ReportGeneratorActor extends AbstractActor {
                                      final WSClient ws,
                                      final String firebaseSecret,
                                      final String filepickerSecret,
-                                     final ImmutableList<TableMapping.TableCreator> creators) {
+                                     final ImmutableList<TableMapping.TableCreator> creators,
+                                     final XWPFDocument olddocx) {
         try {
             XWPFDocument docx = new XWPFDocument();
+
+            XWPFStyles newStyles = docx.createStyles();
+            newStyles.setStyles(olddocx.getStyle());
+
             creators.forEach(c -> {
                 XWPFParagraph header = docx.createParagraph();
                 XWPFRun headerrun = header.createRun();
@@ -256,7 +267,7 @@ public class ReportGeneratorActor extends AbstractActor {
             String filename = "Отчет " + df.format(new Date()) + ".docx";
             this.terminateWithSuccessResponse(parent, bos.toByteArray(), filename);
 //            String body = Base64.getEncoder().encodeToString(bos.toByteArray());
-
+//
 //            WSRequest req = ws.url("https://www.filepicker.io/api/store/S3")
 //                    .setQueryParameter("base64decode", "true")
 //                    .setQueryParameter("mimetype", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -364,7 +375,8 @@ public class ReportGeneratorActor extends AbstractActor {
                         firebaseSecret,
                         filepickerSecret,
                         new ImmutableList.Builder<TableMapping.TableCreator>().build(),
-                        this.getMappings())
+                        this.getMappings(),
+                        docx)
                 );
             } catch (Exception e) {
                 this.self().tell(new ReportGeneratorActorProtocol.RecievedError("file parse as docx error"), this.self());
@@ -423,7 +435,14 @@ public class ReportGeneratorActor extends AbstractActor {
 
             public void create(XWPFDocument document) {
                 XWPFTable newtable = document.createTable();
-                mapper._map.accept(table, newtable);
+                CTTbl cttbl        = newtable.getCTTbl();
+                CTTblPr pr         = cttbl.getTblPr();
+                CTTblWidth tblW = pr.getTblW();
+                tblW.setW(BigInteger.valueOf(5000));
+                tblW.setType(STTblWidth.PCT);
+                pr.setTblW(tblW);
+                cttbl.setTblPr(pr);
+                mapper._map.accept(this.table, newtable);
             }
         }
     }
@@ -441,19 +460,19 @@ public class ReportGeneratorActor extends AbstractActor {
 
                     // создаем первую строку
                     XWPFTableRow tableRowOne = newtable.getRow(0);
-                    tableRowOne.getCell(0).setText("№ п/п");
-                    tableRowOne.addNewTableCell().setText("Дата проведения");
-                    tableRowOne.addNewTableCell().setText("Тема семинара");
-                    tableRowOne.addNewTableCell().setText("Рассмотренные вопросы");
-                    tableRowOne.addNewTableCell().setText("Докладчики");
+                    tableHeader(tableRowOne.getCell(0), "№ п/п");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата проведения");
+                    tableHeader(tableRowOne.addNewTableCell(), "Тема семинара");
+                    tableHeader(tableRowOne.addNewTableCell(), "Рассмотренные вопросы");
+                    tableHeader(tableRowOne.addNewTableCell(), "Докладчики");
 
                     //create second row
                     XWPFTableRow tableRowTwo = newtable.createRow();
-                    tableRowTwo.getCell(0).setText("1");
-                    tableRowTwo.getCell(1).setText("2");
-                    tableRowTwo.getCell(2).setText("3");
-                    tableRowTwo.getCell(3).setText("4");
-                    tableRowTwo.getCell(4).setText("5");
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
 
                     for (int i = 1; i<rows.size(); ++i) {
                         XWPFTableRow currentrow = table.getRow(i);
@@ -477,11 +496,45 @@ public class ReportGeneratorActor extends AbstractActor {
         if (newcell != null) {
             XWPFTableCell oldcell = oldrow.getCell(oldindex);
             if (oldcell != null) {
-                newcell.removeParagraph(0);
+                newcell.setText(oldcell.getText());
+                List<XWPFParagraph> oldps = oldcell.getParagraphs();
+                List<XWPFParagraph> newps = newcell.getParagraphs();
+                for (int k=0; k<oldps.size(); ++k) {
+                    XWPFParagraph oldp = oldps.get(k);
+                    XWPFParagraph newp = newps.size() <= k
+                            ? newcell.addParagraph()
+                            : newps.get(k);
+                    this.cloneParagraph(newp, oldp);
+                }
                 oldcell.getParagraphs().forEach(p -> newcell.addParagraph(p));
             } else {
                 newcell.setText("");
             }
         }
+    }
+
+    private static void cloneParagraph(XWPFParagraph clone, XWPFParagraph source) {
+        CTPPr pPr = clone.getCTP().isSetPPr() ? clone.getCTP().getPPr() : clone.getCTP().addNewPPr();
+        pPr.set(source.getCTP().getPPr());
+        for (XWPFRun r : source.getRuns()) {
+            XWPFRun nr = clone.createRun();
+            cloneRun(nr, r);
+        }
+    }
+
+    private static void cloneRun(XWPFRun clone, XWPFRun source) {
+        //CTRPr rPr = clone.getCTR().isSetRPr() ? clone.getCTR().getRPr() : clone.getCTR().addNewRPr();
+        //rPr.set(source.getCTR().getRPr());
+        clone.setText(source.getText(0));
+    }
+
+    private void tableHeader(XWPFTableCell cell, String text) {
+        //create paragraph
+        XWPFParagraph paragraph = cell.getParagraphs().get(0);
+
+        //Set alignment paragraph to RIGHT
+        paragraph.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun run=paragraph.createRun();
+        run.setText(text);
     }
 }
