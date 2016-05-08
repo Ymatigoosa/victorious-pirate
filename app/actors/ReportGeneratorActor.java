@@ -740,6 +740,83 @@ public class ReportGeneratorActor extends AbstractActor {
                 }
         ));
 
+        // Таблица 10 – План повышения квалификации ППС кафедры	Таблица 12 – Сведения о повышении квалификации ППС
+        result.add(new TableMapping(
+                1,
+                "Таблица 10",
+                "Таблица 12 – Сведения о повышении квалификации ППС",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "ФИО преподавателя, должность");
+                    tableHeader(tableRowOne.addNewTableCell(), "Направление повышения квалификации*");
+                    tableHeader(tableRowOne.addNewTableCell(), "Наименование программы");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата");
+                    tableHeader(tableRowOne.addNewTableCell(), "Сроки освоения **");
+                    tableHeader(tableRowOne.addNewTableCell(), "Организация");
+                    tableHeader(tableRowOne.addNewTableCell(), "Документ о повышении квалификации (реквизиты)***");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(4), "5");
+                    tableHeader(tableRowTwo.getCell(5), "6");
+                    tableHeader(tableRowTwo.getCell(6), "7");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        moveText(currentrow, 3, newrow, 3);
+                        newrow.getCell(4).setText("");
+                        moveText(currentrow, 4, newrow, 5);
+                        newrow.getCell(6).setText("");
+                    }
+                }
+        ));
+
+        // Таблица 11 – План внедрения новых и модернизации действующих лабораторных работ	Таблица 13 – Сведения о внедрении новых и модернизации действующих лабораторных работ
+        result.add(new TableMapping(
+                1,
+                "Таблица 11",
+                "Таблица 13 – Сведения о внедрении новых и модернизации действующих лабораторных работ",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "Наименование дисциплины по учебному плану");
+                    tableHeader(tableRowOne.addNewTableCell(), "Наименование лабораторной работы");
+                    tableHeader(tableRowOne.addNewTableCell(), "Введена или модернизирована");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата введения в учебный процесс");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        moveText(currentrow, 3, newrow, 3);
+                    }
+                }
+        ));
+
         return new ImmutableList.Builder<TableMapping>()
                 .addAll(result)
                 .build();
