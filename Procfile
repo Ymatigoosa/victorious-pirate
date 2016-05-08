@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/victorious-pirate -Dplay.crypto.secret=$PLAY_SECRET -Dhttp.port=${PORT}
+web: target/universal/stage/bin/victorious-pirate -Dplay.crypto.secret=$PLAY_SECRET -Dhttp.port=${PORT} -DfirebaseSecret=${firebaseSecret} -DfilepickerSecret=${filepickerSecret}
