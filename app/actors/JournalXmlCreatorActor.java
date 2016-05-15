@@ -23,37 +23,104 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * Класс ответственный за генерацию XLSX файла журнала
+ * Генерация файла реализована при помощи конечного автомата
+ */
 public class JournalXmlCreatorActor extends UntypedActor {
 
+    /**
+     * Этот метод нужен для запуска этого актора из внешнего мира
+     * @return
+     */
     public static Props props() {
         return Props.create(JournalXmlCreatorActor.class);
     }
 
+    /**
+     * Получение класса для логирования
+     */
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    /**
+     * Формат даты для доабвления в название файла
+     */
     private final DateFormat df = new SimpleDateFormat("d.MM");
 
+    /**
+     * Конструктор
+     */
     public JournalXmlCreatorActor() {
 
     }
 
-    // dangerous state
+    /**
+     * id группы студентов из firebase
+     */
     private String studentGroupUid;
+
+    /**
+     * url для доспута к firebase
+     */
     private String firebaseUrl;
-    private String academicTermUid ;
+
+    /**
+     * id семестра из firebase
+     */
+    private String academicTermUid;
+
+    /**
+     * id курса из firebase
+     */
     private String courseUid;
 
 
+    /**
+     * список дат в журнале (получается из firebase)
+     */
     private List<JournalDate> dates = null;
+
+    /**
+     * список студентов в журнале (получается из firebase)
+     */
     private List<Student> students = null;
+
+    /**
+     * список оценок (получается из firebase)
+     */
     private List<StudentMark> marks = null;
+
+    /**
+     * группа студентов (получается из firebase)
+     */
     private StudentGroup group = null;
+
+    /**
+     * учебный предмент (получается из firebase)
+     */
     private Course course = null;
+
+    /**
+     * ссылка на поток, который запросил генерацию (чтобы ответить ему в конце)
+     */
     private ActorRef initiator = null;
+
+    /**
+     * ссылка на таймер, если он сработает раньше чем закончится генерация - этот класс закроентся с отправлением ошибки
+     */
     private Cancellable timeoutMessage;
 
 
+    /**
+     * Этот метод принимает сообщения
+     * @param msg
+     * @throws Exception
+     */
     public void onReceive(Object msg) throws Exception {
+
         if (msg instanceof JournalXmlCreatorActorProtocol.CreateJournalXml ) {
+            // Если получили сообщение "Сгенерируй документ" - начинаем генерацию, запускаем таймер
+            // (чтобы при неотловленной ошибке выключить поток и не было утечек памятит)
             JournalXmlCreatorActorProtocol.CreateJournalXml createJournalXml = (JournalXmlCreatorActorProtocol.CreateJournalXml)msg;
 
             this.studentGroupUid = createJournalXml.studentGroupUid;
@@ -69,27 +136,42 @@ public class JournalXmlCreatorActor extends UntypedActor {
                     self(), "timeout", context().dispatcher(), null);
 
         } else if (msg instanceof JournalXmlCreatorActorProtocol.DatesRecieved ) {
+            // пришло сообщение от firebase c датами занятий - запоминаем и пробуем создать файл
+            // (файл создасться если все данные пришли)
             this.dates = ((JournalXmlCreatorActorProtocol.DatesRecieved)msg).dates;
             _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.MarksRecieved ) {
+            // пришло сообщение от firebase c оценками - запоминаем и пробуем создать файл
+            // (файл создасться если все данные пришли)
             this.marks = ((JournalXmlCreatorActorProtocol.MarksRecieved)msg).marks;
             _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.StudentsRecieved ) {
+            // пришло сообщение от firebase cо студентами - запоминаем и пробуем создать файл
+            // (файл создасться если все данные пришли)
             this.students = ((JournalXmlCreatorActorProtocol.StudentsRecieved) msg).students;
             _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.StudentGroupRecieved ) {
+            // пришло сообщение от firebase с группой студентов - запоминаем и пробуем создать файл
+            // (файл создасться если все данные пришли)
             this.group = ((JournalXmlCreatorActorProtocol.StudentGroupRecieved) msg).group;
             _tryStartXlsCreating();
         } else if (msg instanceof JournalXmlCreatorActorProtocol.CourseRecieved ) {
+            // пришло сообщение от firebase с учебным пердметом - запоминаем и пробуем создать файл
+            // (файл создасться если все данные пришли)
             this.course = ((JournalXmlCreatorActorProtocol.CourseRecieved) msg).course;
             _tryStartXlsCreating();
         } else if (msg.equals("timeout")) {
+            // таймаут 10 минут вышел - тушим поток
             getContext().stop(self());
         } else {
+            // пришло чтото другое - ругаемся на то что такого сообщения не знаем (в логе будет ошибка)
             unhandled(msg);
         }
     }
 
+    /**
+     * Если все данные пришли запускаем сбор файл
+     */
     private void _tryStartXlsCreating() {
         Boolean canstart = this.dates != null
                 && this.marks != null
@@ -101,6 +183,9 @@ public class JournalXmlCreatorActor extends UntypedActor {
         }
     }
 
+    /**
+     * Сбор файла
+     */
     private void _createXls() {
         log.info("creating xlsx...");
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -171,6 +256,12 @@ public class JournalXmlCreatorActor extends UntypedActor {
         }
     }
 
+    /**
+     * генерация строки с заголовком
+     * @param sheet
+     * @param styles
+     * @param xlsx_dates
+     */
     private void _createXlsFirstRow(Sheet sheet, Map<String, CellStyle> styles, List<JournalDate> xlsx_dates) {
         Row headerRow = sheet.createRow(0);
         Cell cell = headerRow.createCell(0);
@@ -196,6 +287,15 @@ public class JournalXmlCreatorActor extends UntypedActor {
         cell.setCellStyle(styles.get("header_sum"));
     }
 
+    /**
+     * генерация строки со студентом и оценками
+     * @param rownum
+     * @param sheet
+     * @param styles
+     * @param xlsx_dates
+     * @param xlsx_marks
+     * @param student
+     */
     private void _createXlsRow(Integer rownum, Sheet sheet, Map<String, CellStyle> styles, List<JournalDate> xlsx_dates, Map<String, StudentMark> xlsx_marks, Student student) {
         Row headerRow = sheet.createRow(rownum);
         Cell cell = headerRow.createCell(0);
@@ -227,6 +327,12 @@ public class JournalXmlCreatorActor extends UntypedActor {
         cell.setCellStyle(styles.get("cell_g"));
     }
 
+    /**
+     * создание стилей xlsx
+     * (взято из примеров apache poi)
+     * @param wb
+     * @return
+     */
     private static Map<String, CellStyle> _createStyles(Workbook wb){
         Map<String, CellStyle> styles = new HashMap<String, CellStyle>();
         DataFormat df = wb.createDataFormat();
@@ -277,6 +383,11 @@ public class JournalXmlCreatorActor extends UntypedActor {
         return styles;
     }
 
+    /**
+     * Описание стилей границ ячеек
+     * @param wb
+     * @return
+     */
     private static CellStyle _createBorderedStyle(Workbook wb){
         CellStyle style = wb.createCellStyle();
         style.setBorderRight(CellStyle.BORDER_THIN);
@@ -290,6 +401,12 @@ public class JournalXmlCreatorActor extends UntypedActor {
         return style;
     }
 
+    /**
+     * Запрос всех данных из firebase
+     * Данные приходят асинхронно - с помощью механизма событий firebase
+     * При получении события из firebase оборачиваем его в свое событие и шлем себе
+     * (обработчики своих событий в onRecieve)
+     */
     private void _requestDataFromFirebase() {
         Firebase rootRef = new Firebase(this.firebaseUrl);
         final ActorRef self_c = this.self();
