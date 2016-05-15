@@ -183,7 +183,7 @@ class UserDialog extends React.Component {
           })}
         />
         <Checkbox
-          label="Учитель"
+          label="Преподаватель"
           checked={roles['teacher'] !== void 0 && roles['teacher'] !== null}
           onCheck={(e, checked) => this.props.actions.setUsermanagerDialogState({
             roles: {

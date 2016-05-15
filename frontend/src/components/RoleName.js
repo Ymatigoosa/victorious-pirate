@@ -6,7 +6,7 @@ export const rolename = (role) =>
     : role == 'clerk'
       ? 'Секретарь'
       : role == 'teacher'
-       ? 'Учитель'
+       ? 'Преподаватель'
        : `Неизвестная роль '${role}'`;
 
 export const RoleName = ({role}) => (

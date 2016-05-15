@@ -109,7 +109,7 @@ class CategoriesDialog extends React.Component {
           onChange={(e) => this.props.actions.setCategoryDialogState({name: e.target.value})} />
         <br />
           <Checkbox
-            label="Доступна учителям"
+            label="Доступна преподавателям"
             checked={allowedForTeachers}
             onCheck={(e, checked) => this.props.actions.setCategoryDialogState({allowedForTeachers: checked})}
           />
