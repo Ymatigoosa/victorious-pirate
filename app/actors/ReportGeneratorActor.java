@@ -254,7 +254,7 @@ public class ReportGeneratorActor extends AbstractActor {
             XWPFStyles newStyles = docx.createStyles();
             newStyles.setStyles(olddocx.getStyle());
 
-            creators.forEach(c -> {
+            creators.stream().sorted((a, b) -> a.mapper.indexInReport - b.mapper.indexInReport).forEach(c -> {
                 XWPFParagraph emptyline = docx.createParagraph();
                 XWPFRun emptylinerun = emptyline.createRun();
                 emptylinerun.setText("");
