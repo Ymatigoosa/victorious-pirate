@@ -4,7 +4,14 @@ import models.*;
 
 import java.util.List;
 
+/**
+ * Класс описывает список сообщений, которые может принять JournalXmlCreatorActor
+ */
 public class JournalXmlCreatorActorProtocol {
+
+    /**
+     * Сообщение Сгенерируй мне документ
+     */
     public static class CreateJournalXml {
 
         public final String academicTermUid;
@@ -21,6 +28,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * Сообщение xlsx сгенерирована
+     */
     public static class JournalXmlCreated {
         public final String academicTermUid;
         public final String courseUid;
@@ -41,6 +51,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * Сообщение произошла ошибка при генерации
+     */
     public static class JournalXmlError {
         public final String academicTermUid;
         public final String courseUid;
@@ -57,6 +70,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * сообщение даты приняты от firebase
+     */
     public static class DatesRecieved {
         public final List<JournalDate> dates;
 
@@ -65,6 +81,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * сообщение студенты приняты от firebase
+     */
     public static class StudentsRecieved {
         public final List<Student> students;
 
@@ -73,6 +92,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * сообщение оценки приняты от firebase
+     */
     public static class MarksRecieved {
         public final List<StudentMark> marks;
 
@@ -81,6 +103,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * сообщение группа студентов принята от firebase
+     */
     public static class StudentGroupRecieved {
         public final StudentGroup group;
 
@@ -89,6 +114,9 @@ public class JournalXmlCreatorActorProtocol {
         }
     }
 
+    /**
+     * сообщение учебный предмет принят от firebase
+     */
     public static class CourseRecieved {
         public final Course course;
 
