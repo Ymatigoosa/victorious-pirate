@@ -84,7 +84,7 @@
     "firebase": "^2.4.1",
     "install": "^0.6.1",
     "keymirror": "^0.1.1",
-    "material-ui": "^0.15.0-alpha.2",
+    "material-ui": "0.15.0-alpha.2",
     "node-uuid": "^1.4.7",
     "normalize.css": "^3.0.3",
     "npm": "^3.8.3",
