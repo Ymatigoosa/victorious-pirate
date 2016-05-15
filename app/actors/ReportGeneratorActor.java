@@ -817,6 +817,77 @@ public class ReportGeneratorActor extends AbstractActor {
                 }
         ));
 
+        // Таблица 12 – План приобретения нового оборудования, ТСО, средств ВТ	Таблица 14 – Сведения о приобретении и введении в эксплуатацию нового оборудования, ТСО, средств ВТ
+        result.add(new TableMapping(
+                10,
+                "Таблица 12",
+                "Таблица 14 – Сведения о приобретении и введении в эксплуатацию нового оборудования, ТСО, средств ВТ",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "Наименование оборудования");
+                    tableHeader(tableRowOne.addNewTableCell(), "Назначение");
+                    tableHeader(tableRowOne.addNewTableCell(), "Стоимость и источник финансирования");
+                    tableHeader(tableRowOne.addNewTableCell(), "Дата ввода в эксплуатацию");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        moveText(currentrow, 3, newrow, 3);
+                    }
+                }
+        ));
+
+        // Таблица 13 – Другая учебно-методическая и организационная работа	Таблица 15 – Другая учебно-методическая и организационная работа
+        result.add(new TableMapping(
+                11,
+                "Таблица 13",
+                "Таблица 15 – Другая учебно-методическая и организационная работа",
+                (table, newtable) -> {
+                    List<XWPFTableRow> rows = table.getRows();
+
+                    // создаем первую строку
+                    XWPFTableRow tableRowOne = newtable.getRow(0);
+                    tableHeader(tableRowOne.getCell(0), "№ п/п");
+                    tableHeader(tableRowOne.addNewTableCell(), "Наименование мероприятия*");
+                    tableHeader(tableRowOne.addNewTableCell(), "Место и дата проведения");
+                    tableHeader(tableRowOne.addNewTableCell(), "Ответственный за организацию и проведение");
+                    tableHeader(tableRowOne.addNewTableCell(), "Число участников");
+
+                    //create second row
+                    XWPFTableRow tableRowTwo = newtable.createRow();
+                    tableHeader(tableRowTwo.getCell(0), "1");
+                    tableHeader(tableRowTwo.getCell(1), "2");
+                    tableHeader(tableRowTwo.getCell(2), "3");
+                    tableHeader(tableRowTwo.getCell(3), "4");
+                    tableHeader(tableRowTwo.getCell(3), "5");
+
+                    for (int i = 2; i<rows.size(); ++i) {
+                        XWPFTableRow currentrow = table.getRow(i);
+                        XWPFTableRow newrow = newtable.createRow();
+
+                        moveText(currentrow, 0, newrow, 0);
+                        moveText(currentrow, 1, newrow, 1);
+                        moveText(currentrow, 2, newrow, 2);
+                        moveText(currentrow, 3, newrow, 3);
+                        newrow.getCell(4).setText("");
+                    }
+                }
+        ));
+
         return new ImmutableList.Builder<TableMapping>()
                 .addAll(result)
                 .build();
