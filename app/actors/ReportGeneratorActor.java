@@ -32,61 +32,136 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+/**
+ * Класс ответсвенный за генерацию отчета из плана при помощи
+ * конечного автомата, реализованного при помощи актора
+ * (см диаграмму report_generation_fsm)
+ */
 public class ReportGeneratorActor extends AbstractActor {
 
+    /**
+     * метод нужен для запуска данного актора из внешнего мира
+     * @return
+     */
     public static Props props() {
         return Props.create(ReportGeneratorActor.class);
     }
 
+    /**
+     * ссылка на логгер
+     */
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    /**
+     * формат даты для имени файла
+     */
     private final DateFormat df = new SimpleDateFormat("d.MM HH-mm-ss");
 
+    /**
+     * ссылка на базу данных
+     */
     private Firebase rootRef;
 
+    /**
+     * конструктор
+     * запускает таймер 5 минут - если за это время генерация не завершится
+     * поток закроется принудительно
+     */
     public ReportGeneratorActor() {
         Scheduler scheduler = getContext().system().scheduler();
         scheduler.scheduleOnce(Duration.create(5, TimeUnit.MINUTES),
                 self(), "timeout", context().dispatcher(), null);
 
+        // начало приема сообщений в состоянии "начальное состояние" (см диаграмму report_generation_fsm)
         receive(initialState());
     }
 
+    /**
+     * начальное состояние
+     * (см диаграмму report_generation_fsm)
+     * @return
+     */
     final PartialFunction<Object, BoxedUnit> initialState() {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.GenerateReportlXml.class, msg -> {
+                    // пришло сообщение "сгенерируй мне отчет"
+                    // запускаем перерацию и переходим в состояние "ожидание файла от firebase"
                     processGenerateReportXml(msg);
                 })
                 .matchEquals("timeout", msg -> {
+                    // сообщение "сгенерируй мне отчет" и не пришло от запустившего потока - тушим этот поток
                     this.terminateSilently();
                 }).build();
     }
 
+    /**
+     * состояние "ожидание файла от firebase"
+     * (см диаграмму report_generation_fsm)
+     * @param parent
+     * @param ws
+     * @param firebaseSecret
+     * @param filepickerSecret
+     * @return
+     */
     final PartialFunction<Object, BoxedUnit> waitingForFirebaseDocument(final ActorRef parent, WSClient ws, String firebaseSecret, String filepickerSecret) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedDocument.class, msg -> {
+                    // пришел файл от firebase - запрашиваем тело из filepicker
+                    // и переходим в состояние "жду тело файла"
                     this.processReceivedDocument(msg, parent, ws, firebaseSecret, filepickerSecret);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    // пришла ошибка от firebase - отправляем его в контроллер и закрываемся
                     this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
+                    // сообщение от firebase так и не пришло - шлем ошибку в контроллер и закрываемся
                     this.terminateWithFailureResponse(parent, msg);
                 }).build();
     }
 
+    /**
+     * Состояние "жду тело файла"
+     * (см диаграмму report_generation_fsm)
+     * @param parent
+     * @param document
+     * @param ws
+     * @param firebaseSecret
+     * @param filepickerSecret
+     * @return
+     */
     final PartialFunction<Object, BoxedUnit> waitingForFilepickerDocument(final ActorRef parent, final Document document, WSClient ws, String firebaseSecret, String filepickerSecret) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.RecievedFile.class, msg -> {
+                    // запуск парсинга файла и переход в состояние "ожидается заголовок" или "ожидаестя таблица"
                     this.processReceivedFile(msg, parent, ws, firebaseSecret, filepickerSecret, document);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    // пришла ошибка - перенаправляем ошибку в контроллер и закрываемся
                     this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
+                    // пришел маймаут - шлем ошибку в контроллер и закрываемся
                     this.terminateWithFailureResponse(parent, msg);
                 }).build();
     }
 
+    /**
+     * "ожидается заголовок"
+     * (см диаграмму report_generation_fsm)
+     *
+     * В этом состоянии поочередно перебираем элементы документа пока не найдем один из заголовков
+     * Если заголовок найден - перехоидм в состояние "ожадание таблицы"
+     * @param parent
+     * @param document
+     * @param ws
+     * @param firebaseSecret
+     * @param filepickerSecret
+     * @param creators
+     * @param mappers
+     * @param docx
+     * @return
+     */
     final PartialFunction<Object, BoxedUnit> parsing_waitingForHeader(
             final ActorRef parent,
             final Document document,
@@ -98,6 +173,11 @@ public class ReportGeneratorActor extends AbstractActor {
             XWPFDocument docx) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
+                    // очередной элемент - параграф
+                    // проверяем следующий
+                    // нашли параграф - остаемся в данном состоянии и шлем себе "параграф найден"
+                    // нашли заголовое - переходим в ожидается таблица и шлем себе "параграф найден"
+                    // конец файла - шлем себе сообщение "конец файла"
                     Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
                     if (currentIBodyElementOpt.isPresent()) {
                         IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
@@ -128,16 +208,35 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
+                    // если конец файла - переходим в "конец парсинга" и начинаем собирать отчет
                     this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators, docx);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    // чтот прлохое случилось - перенаправляем ошибку в контроллер и закрываемся
                     this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
+                    // пришел таймаут - шлем ошибку в контроллер и закрываемся
                     this.terminateWithFailureResponse(parent, msg);
                 }).build();
     }
 
+    /**
+     * состояние "ожидается таблица"
+     * (см диаграмму report_generation_fsm)
+     *
+     * переходим в него если был найден заколовок и ждем элемент таблицу чтобы сохранить
+     * @param parent
+     * @param document
+     * @param ws
+     * @param firebaseSecret
+     * @param filepickerSecret
+     * @param creators
+     * @param mappers
+     * @param currentmapping
+     * @param docx
+     * @return
+     */
     final PartialFunction<Object, BoxedUnit> parsing_waitingForTable(
             final ActorRef parent,
             final Document document,
@@ -150,6 +249,11 @@ public class ReportGeneratorActor extends AbstractActor {
             XWPFDocument docx) {
         return ReceiveBuilder.
                 match(ReportGeneratorActorProtocol.ParagraphFinded.class, msg -> {
+                    // очередной элемент - параграф
+                    // проверяем следующий
+                    // нашли параграф - остаемся в данном состоянии и шлем себе "параграф найден"
+                    // нашли таблицу - сохраняем и переходив в состояние "ожидается параграф" с сообщением "параграф найден"
+                    // конец файла - шлем себе сообщение "конец файла"
                     Optional<IBodyElement> currentIBodyElementOpt = msg.rest.stream().findFirst();
                     if (currentIBodyElementOpt.isPresent()) {
                         IBodyElement currentIBodyElement = currentIBodyElementOpt.get();
@@ -173,12 +277,15 @@ public class ReportGeneratorActor extends AbstractActor {
                     }
                 })
                 .match(ReportGeneratorActorProtocol.ParsingEnded.class, msg -> {
+                    // если конец файла - переходим в "конец парсинга" и начинаем собирать отчет
                     this.processParsingEnded(parent,document, ws,firebaseSecret, filepickerSecret, creators, docx);
                 })
                 .match(ReportGeneratorActorProtocol.RecievedError.class, msg -> {
+                    // произошла ошибка - перенаправляем в контроллер и закрываемся
                     this.processReceivedError(msg, parent);
                 })
                 .matchEquals("timeout", msg -> {
+                    // пришел таймаут - шлем контроллеру ошибку и тушимся
                     this.terminateWithFailureResponse(parent, msg);
                 }).build();
     }
@@ -470,6 +577,10 @@ public class ReportGeneratorActor extends AbstractActor {
         border.setSz(BigInteger.valueOf(2));
     }
 
+    /**
+     * Определяет методику генерации таблиц
+     * @return
+     */
     private ImmutableList<TableMapping> getMappings() {
         List<TableMapping> result = new ArrayList<>();
 
