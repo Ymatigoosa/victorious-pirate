@@ -99,7 +99,7 @@ class Layout extends React.Component {
     const title = location.pathname.startsWith('/journal')
       ? 'Журнал'
       : location.pathname.startsWith('/files')
-        ? 'Файлы'
+        ? 'Номенклатура'
         : location.pathname.startsWith('/users')
           ? 'Управление пользователями'
           : 'Неизвестная страница';
@@ -164,7 +164,7 @@ class Layout extends React.Component {
               <Divider />
               <Subheader>Меню</Subheader>
               <ListItemLink to='/journal' {...listitemlinkprops} primaryText="Журнал" />
-              {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...listitemlinkprops} primaryText="Файлы" /> : null}
+              {this.isInRole(['clerk', 'admin']) ? <ListItemLink to='/files' {...listitemlinkprops} primaryText="Номенклатура" /> : null}
               {this.isInRole('admin') ? (
                 <div>
                   <Divider />
