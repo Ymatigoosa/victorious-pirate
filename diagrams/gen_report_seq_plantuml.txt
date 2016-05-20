@@ -1,0 +1,61 @@
+@startuml
+
+participant "Клиент" as client
+participant "Api\nконтроллер\n" as controller
+participant "Генератор отчета" as actor
+participant "База\nданных" as firebase
+participant "Хранилище\nфайлов" as filepicker
+
+
+client -> controller : Запрос api\n+ токен
+activate controller
+
+controller -> actor : Запуск генератора отчета
+activate actor
+
+actor -> actor : Проверка токена
+
+actor -> firebase : Проверка ролей
+activate firebase
+
+firebase --> actor : Ок
+deactivate firebase
+
+actor -> firebase : Запрос данных\n+ мастер ключ
+activate firebase
+
+firebase --> actor : Данные
+deactivate firebase
+
+actor -> filepicker : Запрос файла\n+ мастер ключ
+activate filepicker
+
+filepicker --> actor : Файл
+deactivate filepicker
+
+actor -> actor : Разбор файла\nна элементы
+activate actor
+
+actor --> actor : Список элементов\nфайла
+deactivate actor
+
+actor -> actor : Обход списка элементов,\nпоиск таблиц
+activate actor
+
+actor --> actor : Найденные таблицы
+deactivate actor
+
+actor -> actor : Формирование нового файла
+activate actor
+
+actor --> actor : Новый файл
+deactivate actor
+
+actor --> controller : Новый файл
+deactivate actor
+destroy actor
+
+controller --> client : Новый файл
+deactivate controller
+
+@enduml
