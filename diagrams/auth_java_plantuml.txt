@@ -1,0 +1,36 @@
+@startuml
+
+participant "Клиент" as client
+participant "Модуль\nавторизации\n(Знает ключ1)" as firebase_auth
+participant "База\nданных" as firebase
+participant "Web\nсервер\n(Знает ключ1\nи ключ2)" as javaweb
+participant "Хранилище\nфайлов\n(Знает ключ2)" as filepicker
+
+
+client -> javaweb : Запрос api\n+ токен
+activate javaweb
+
+javaweb -> javaweb : Проверка подписи\nтокена используя\nHS256 и key1
+
+javaweb -> firebase : Проверка ролей
+activate firebase
+
+firebase --> javaweb : Ок
+deactivate firebase
+
+javaweb -> firebase : Запрос данных\n+ мастер ключ
+activate firebase
+
+firebase --> javaweb : Данные
+deactivate firebase
+
+javaweb -> filepicker : Запрос файлов\n+ мастер ключ
+activate filepicker
+
+filepicker --> javaweb : Файлы
+deactivate filepicker
+
+javaweb --> client : Отправка данных
+deactivate javaweb
+
+@enduml
