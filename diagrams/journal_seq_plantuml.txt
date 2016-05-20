@@ -1,0 +1,48 @@
+@startuml
+
+participant "Клиент" as client
+participant "Api\nконтроллер\n" as controller
+participant "Генератор расписания" as actor
+participant "База\nданных" as firebase
+
+
+client -> controller : Запрос api\n+ токен
+activate controller
+
+controller -> actor : Запуск генератора расписания
+activate actor
+
+actor -> actor : Проверка токена
+
+actor -> firebase : Проверка ролей
+activate firebase
+
+firebase --> actor : Ок
+deactivate firebase
+
+actor -> firebase : Запрос данных\n+ мастер ключ
+activate firebase
+
+firebase --> actor : Данные
+deactivate firebase
+
+actor -> actor : Формирование расписания\nв памяти
+activate actor
+
+actor --> actor : Структура - расписание
+deactivate actor
+
+actor -> actor : Генерация Excel таблицы\nпо структуре
+activate actor
+
+actor --> actor : Новый файл
+deactivate actor
+
+actor --> controller : Новый файл
+deactivate actor
+destroy actor
+
+controller --> client : Новый файл
+deactivate controller
+
+@enduml
