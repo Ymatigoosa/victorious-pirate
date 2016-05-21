@@ -1,0 +1,34 @@
+@startuml
+
+participant "Отображение" as view
+participant "Диспетчер\nдействий" as dispatcher
+participant "Хранилище\nсостояния" as store
+participant "Реплика\nбазы данных" as firebase
+
+
+view -> dispatcher : Действие\nпользователя
+activate dispatcher
+
+dispatcher -> store : Изменение данных
+activate store
+
+dispatcher -> firebase : Изменение данных
+deactivate dispatcher
+activate firebase
+
+
+store --> view : Новые данные
+deactivate store
+
+activate view
+view --> view : Перерисовка
+deactivate view
+
+firebase --> view : Новые данные
+deactivate firebase
+
+activate view
+view --> view : Перерисовка
+deactivate view
+
+@enduml
