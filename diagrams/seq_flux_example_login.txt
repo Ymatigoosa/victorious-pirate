@@ -1,0 +1,35 @@
+@startuml
+
+participant "Отображение" as view
+participant "Диспетчер\nдействий" as dispatcher
+participant "Хранилище\nсостояния" as store
+participant "Реплика\nбазы данных" as firebase
+
+
+view -> dispatcher : Логин
+activate dispatcher
+
+dispatcher -> firebase : Запрос авторизации
+activate firebase
+
+dispatcher -> store : Включить индикатор\nзагрузки профиля
+deactivate dispatcher
+activate store
+
+store --> view : Новые данные
+deactivate store
+
+firebase --> dispatcher : Авторизация успешна
+deactivate firebase
+activate dispatcher
+
+dispatcher -> store : Выключить индикатор\nзагрузки профиля
+activate store
+
+dispatcher -> store : Установить новые\nданные профиля
+deactivate dispatcher
+
+store --> view : Новые данные
+deactivate store
+
+@enduml
