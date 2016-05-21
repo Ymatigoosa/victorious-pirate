@@ -1,0 +1,41 @@
+@startuml
+
+skinparam componentStyle uml2
+
+cloud  "Amazon AWS" as aws {
+    node "Heroku" as heroku {
+        node "Web server" as webgui {
+        }
+    }
+    
+    node "Filepiker API" as filepicker {
+    }
+}
+
+cloud  "Google cloud" as google {
+    node "Auth" as auth {
+    }
+    node "Database" as firebase {
+    }
+}
+
+cloud  "Amazon S3" as s3 {
+    node "File storage" as filepicker_store {
+    }
+    
+}
+
+node "<<web browser>>\nClient" as client {
+}
+
+filepicker --> filepicker_store
+client --> filepicker
+client --> firebase
+client --> webgui
+client --> auth
+
+webgui --> firebase
+webgui --> filepicker
+webgui --> auth
+
+@enduml
