@@ -1,0 +1,15 @@
+@startuml
+
+usecase  "Отображение" as view
+usecase  "Диспетчер\nдействий" as dispatcher
+usecase  "Хранилище\nсостояния" as store
+usecase  "Реплика\nбазы данных" as firebase
+
+view -up-> dispatcher : (1) Действия
+dispatcher -up-> store : (2) Изменения\nданных
+dispatcher -up-> firebase : (2) Изменения\nданных
+
+store -up-> view : (3) Новые\nданные
+firebase -up-> view : (3) Новые\nданные
+
+@enduml
