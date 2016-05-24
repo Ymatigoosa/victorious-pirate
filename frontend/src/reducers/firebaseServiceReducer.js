@@ -1,6 +1,10 @@
 import FirebaseService from 'stores/FirebaseService';
 
-const initialState = new FirebaseService('https://victorious-pirate.firebaseio.com');
+const firebaseUrl = window._FIREBASEURL;
+
+console.log('firebaseUrl', firebaseUrl);
+
+const initialState = new FirebaseService(firebaseUrl);
 
 function reducer(state = initialState, action) {
   //console.log(123, state);
