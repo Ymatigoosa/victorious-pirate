@@ -16,6 +16,8 @@ Login: admin@admin.com
 
 Pass: admin
 
+Language: RU
+
 ## How to run?
 
 ### Server
