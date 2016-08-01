@@ -22,11 +22,16 @@
   "gh-pages-deploy": {
     "staticpath": "dist"
   },
+  "repository": "https://github.com/pahomovda/victorious-pirate",
   "keywords": [
     "react",
     "material",
     "material-ui"
   ],
+  "author": {
+    "name": "Dmitry Pahomov  ",
+    "email": "topt.iiiii@gmail.com"
+  },
   "license": "MIT",
   "private": true,
   "devDependencies": {
