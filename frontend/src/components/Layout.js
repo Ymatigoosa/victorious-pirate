@@ -118,11 +118,11 @@ class Layout extends React.Component {
           onEmailChange={(e) => changeEmail(e.target.value)}
           onPasswordChange={(e) => changePassword(e.target.value)}
           onLogin={() => login()} >
-            {/*<div>
+            <div>
               <RaisedButton label="admin" onTouchTap={() => login({email: 'admin@admin.com', password: 'admin'})} />
               <RaisedButton label="clerk" onTouchTap={() => login({email: 'clerk@clerk.com', password: 'clerk'})} />
               <RaisedButton label="teacher" onTouchTap={() => login({email: 'teacher@teacher.com', password: 'teacher'})} />
-            </div>*/}
+            </div>
           </LoginDialog>
       : <ProfileDialog
           open={isProfileDialogOpen}
